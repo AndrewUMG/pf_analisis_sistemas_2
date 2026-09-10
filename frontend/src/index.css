@@ -1,0 +1,39 @@
+@import "tailwindcss";
+
+@theme {
+  --color-carbon-950: #0b0b0d;
+  --color-carbon-900: #17171a;
+  --color-carbon-800: #232326;
+  --color-carbon-700: #35353a;
+  --color-carbon-600: #4d4d54;
+  --color-carbon-400: #8a8a92;
+  --color-carbon-200: #d4d4d8;
+  --color-carbon-100: #ececee;
+
+  --color-gold-600: #a9762f;
+  --color-gold-500: #c8923f;
+  --color-gold-400: #d9ab5c;
+  --color-gold-300: #e7c58a;
+
+  --font-display: 'Poppins', 'Segoe UI', sans-serif;
+}
+
+body {
+  background-color: var(--color-carbon-950);
+  color: var(--color-carbon-100);
+  font-family: var(--font-display);
+}
+
+@layer components {
+  .campo {
+    @apply w-full rounded-lg border border-carbon-700 bg-carbon-800 px-3 py-2 text-sm text-carbon-100 placeholder:text-carbon-600 focus:border-gold-500 focus:outline-none focus:ring-1 focus:ring-gold-500;
+  }
+
+  .btn-principal {
+    @apply rounded-lg bg-gold-500 px-4 py-2.5 text-sm font-semibold text-carbon-950 transition-colors hover:bg-gold-400 disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .btn-secundario {
+    @apply rounded-lg border border-carbon-700 px-4 py-2.5 text-sm font-medium text-carbon-200 transition-colors hover:border-gold-500 hover:text-gold-400 disabled:cursor-not-allowed disabled:opacity-60;
+  }
+}
