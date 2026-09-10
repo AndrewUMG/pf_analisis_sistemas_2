@@ -197,7 +197,7 @@ export function ReservarPage() {
                     barberoId === barbero.id ? 'border-accent bg-accent-soft' : 'bg-surface hover:border-border-strong'
                   }`}
                 >
-                  <ImagenPlaceholder variante="avatar" etiqueta="Foto" className="h-11 w-11 shrink-0" />
+                  <ImagenPlaceholder src={barbero.foto} variante="avatar" etiqueta="Foto" className="h-11 w-11 shrink-0" />
                   <span>
                     <span className="block font-medium text-text">
                       {barbero.user.nombres} {barbero.user.apellidos}

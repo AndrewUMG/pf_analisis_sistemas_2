@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Exceptions\NegocioException;
 use App\Http\Controllers\Controller;
 use App\Models\Barbero;
 use App\Models\User;
@@ -9,6 +10,8 @@ use App\Services\AgendaService;
 use App\Services\ReservaService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 /** Perfiles de barbero, su horario semanal y su agenda (RF-03, CU-003). */
@@ -150,5 +153,33 @@ class BarberoController extends Controller
         $fecha = $request->input('fecha', now()->toDateString());
 
         return $this->agenda->agendaDelDia($barbero, $fecha);
+    }
+
+    /** Sube o reemplaza la foto de perfil; puede hacerlo el administrador o el propio barbero. */
+    public function subirFoto(Request $request, Barbero $barbero)
+    {
+        $usuario = $request->user();
+        if (! $usuario->esAdministrador() && $usuario->id !== $barbero->user_id) {
+            throw new NegocioException('Solo puedes actualizar tu propia foto de perfil.');
+        }
+
+        $request->validate([
+            'foto' => 'required|image|mimes:jpg,jpeg,png,webp|max:4096',
+        ]);
+
+        if ($barbero->foto) {
+            Storage::disk('public')->delete($this->rutaDesdeUrl($barbero->foto));
+        }
+
+        $ruta = $request->file('foto')->store('barberos', 'public');
+        $barbero->update(['foto' => Storage::disk('public')->url($ruta)]);
+
+        return $barbero->load(['user', 'servicios']);
+    }
+
+    /** Convierte la URL pública guardada de vuelta a la ruta relativa del disco "public". */
+    private function rutaDesdeUrl(string $url): string
+    {
+        return Str::after(parse_url($url, PHP_URL_PATH) ?? '', '/storage/');
     }
 }

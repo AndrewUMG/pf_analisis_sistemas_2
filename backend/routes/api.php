@@ -51,6 +51,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/servicios', [ServicioController::class, 'store']);
         Route::put('/servicios/{servicio}', [ServicioController::class, 'update']);
         Route::delete('/servicios/{servicio}', [ServicioController::class, 'destroy']);
+        Route::post('/servicios/{servicio}/imagen', [ServicioController::class, 'subirImagen']);
 
         Route::post('/barberos', [BarberoController::class, 'store']);
         Route::put('/barberos/{barbero}', [BarberoController::class, 'update']);
@@ -77,6 +78,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/barberos/{barbero}/horarios', [BarberoController::class, 'actualizarHorarios']);
         Route::post('/barberos/{barbero}/excepciones', [BarberoController::class, 'registrarExcepcion']);
         Route::get('/barberos/{barbero}/agenda', [BarberoController::class, 'agendaDelDia']);
+        Route::post('/barberos/{barbero}/foto', [BarberoController::class, 'subirFoto']);
 
         Route::post('/citas/{cita}/iniciar', [CitaController::class, 'iniciar']);
         Route::post('/citas/{cita}/finalizar', [CitaController::class, 'finalizar']);

@@ -99,10 +99,32 @@ atención con cálculo de comisión, jornada semanal y bloqueo de fechas,
 cobro combinando una cita y un producto con descuento de inventario en
 tiempo real, y anulación de venta con reversión de existencias.
 
-## 6. Qué queda pendiente
+## 6. Carga de fotos reales (servicios y barberos)
+
+Desde Administrador → Catálogo, cada servicio y cada barbero tiene un botón
+"Subir foto" / "Cambiar foto" junto a su `ImagenPlaceholder`. Al elegir una
+imagen (JPG/PNG/WEBP, máx. 4 MB) se sube de inmediato a:
+
+- `POST /servicios/{id}/imagen` (solo administrador)
+- `POST /barberos/{id}/foto` (administrador o el propio barbero — un barbero
+  no puede cambiar la foto de otro)
+
+El backend guarda el archivo en `storage/app/public/{servicios|barberos}/`
+(disco `public` de Laravel, servido vía el symlink `public/storage` —
+requiere haber corrido `php artisan storage:link` una vez) y reemplaza
+la foto anterior si existía, para no acumular archivos huérfanos. La URL
+resultante se guarda en `servicios.imagen` / `barberos.foto` (columna nueva,
+migración `add_foto_to_barberos_table`) y se usa automáticamente en **todas**
+las pantallas que ya mostraban `ImagenPlaceholder` — catálogo público, wizard
+de reserva, registro presencial, mis citas — sin tocarlas de nuevo: el
+componente `ImagenPlaceholder` muestra la foto real si `src` viene con datos,
+y el placeholder punteado si no.
+
+## 7. Qué queda pendiente
 
 Con esto el frontend cubre el sistema completo descrito en el DERCAS.
-Quedan como posibles siguientes pasos: subir fotos reales para reemplazar
-los `ImagenPlaceholder`, paginación visible en listados largos (usuarios,
-ventas), y notificaciones push/email reales en vez del proveedor de log
-(`LogProveedorMensajeria`) que ya trae el backend.
+Quedan como posibles siguientes pasos: una foto de portada para el hero/login
+(hoy sigue siendo un placeholder fijo, no editable desde el panel),
+paginación visible en listados largos (usuarios, ventas), y notificaciones
+push/email reales en vez del proveedor de log (`LogProveedorMensajeria`) que
+ya trae el backend.

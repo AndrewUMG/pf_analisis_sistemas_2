@@ -20,6 +20,7 @@ class Barbero extends Model
     protected $fillable = [
         'user_id',
         'especialidad',
+        'foto',
         'comision_porcentaje',
     ];
 

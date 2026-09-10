@@ -5,6 +5,7 @@ import { Spinner } from '../../components/Spinner'
 import { PageHeader } from '../../components/PageHeader'
 import { Tabs } from '../../components/Tabs'
 import { ImagenPlaceholder } from '../../components/ImagenPlaceholder'
+import { BotonSubirFoto } from '../../components/BotonSubirFoto'
 import type { Barbero, Servicio } from '../../types'
 
 const CATEGORIAS: Servicio['categoria'][] = ['corte', 'barba', 'tratamiento', 'spa_facial', 'combo']
@@ -234,8 +235,9 @@ function TabServicios({
 
       <ul className="space-y-2">
         {servicios.map((servicio) => (
-          <li key={servicio.id} className="tarjeta flex flex-wrap items-center justify-between gap-3 p-4">
-            <div>
+          <li key={servicio.id} className="tarjeta flex flex-wrap items-center gap-4 p-4">
+            <ImagenPlaceholder src={servicio.imagen} etiqueta="Foto" className="h-14 w-14 shrink-0 rounded-lg" />
+            <div className="flex-1">
               <p className="font-medium text-text">
                 {servicio.nombre}
                 {!servicio.activo && <span className="ml-2 text-xs text-text-faint">(inactivo)</span>}
@@ -245,6 +247,16 @@ function TabServicios({
               </p>
             </div>
             <div className="flex gap-2">
+              <BotonSubirFoto
+                etiqueta={servicio.imagen ? 'Cambiar foto' : 'Subir foto'}
+                onError={onError}
+                onSubir={async (archivo) => {
+                  const datos = new FormData()
+                  datos.append('imagen', archivo)
+                  await api.post(`/servicios/${servicio.id}/imagen`, datos)
+                  onCambio()
+                }}
+              />
               <button onClick={() => abrirEditar(servicio)} className="btn-secundario px-3 py-1.5 text-xs">
                 Editar
               </button>
@@ -418,7 +430,7 @@ function TabBarberos({
       <ul className="space-y-2">
         {barberos.map((barbero) => (
           <li key={barbero.id} className="tarjeta flex items-center gap-4 p-4">
-            <ImagenPlaceholder variante="avatar" etiqueta="Foto" className="h-11 w-11 shrink-0" />
+            <ImagenPlaceholder src={barbero.foto} variante="avatar" etiqueta="Foto" className="h-11 w-11 shrink-0" />
             <div className="flex-1">
               <p className="font-medium text-text">
                 {barbero.user.nombres} {barbero.user.apellidos}
@@ -427,9 +439,21 @@ function TabBarberos({
                 {barbero.especialidad ?? 'Sin especialidad'} · Comisión {Number(barbero.comision_porcentaje)}%
               </p>
             </div>
-            <button onClick={() => abrirEditar(barbero)} className="btn-secundario px-3 py-1.5 text-xs">
-              Editar
-            </button>
+            <div className="flex gap-2">
+              <BotonSubirFoto
+                etiqueta={barbero.foto ? 'Cambiar foto' : 'Subir foto'}
+                onError={onError}
+                onSubir={async (archivo) => {
+                  const datos = new FormData()
+                  datos.append('foto', archivo)
+                  await api.post(`/barberos/${barbero.id}/foto`, datos)
+                  onCambio()
+                }}
+              />
+              <button onClick={() => abrirEditar(barbero)} className="btn-secundario px-3 py-1.5 text-xs">
+                Editar
+              </button>
+            </div>
           </li>
         ))}
       </ul>

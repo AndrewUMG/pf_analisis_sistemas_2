@@ -102,7 +102,7 @@ export function CatalogoPage() {
                 key={servicio.id}
                 className="tarjeta flex flex-col overflow-hidden transition-shadow hover:shadow-[var(--shadow-raised)]"
               >
-                <ImagenPlaceholder variante="foto" className="aspect-[16/10] w-full rounded-none border-x-0 border-t-0" />
+                <ImagenPlaceholder src={servicio.imagen} variante="foto" className="aspect-[16/10] w-full rounded-none border-x-0 border-t-0" />
                 <div className="flex flex-1 flex-col justify-between p-5">
                   <div>
                     <span className="text-xs font-medium uppercase tracking-wide text-accent-hover">
@@ -130,6 +130,7 @@ export function CatalogoPage() {
           {barberos.map((barbero) => (
             <article key={barbero.id} className="tarjeta flex items-start gap-4 p-5">
               <ImagenPlaceholder
+                src={barbero.foto}
                 variante="avatar"
                 etiqueta="Foto"
                 className="h-14 w-14 shrink-0 text-[10px]"

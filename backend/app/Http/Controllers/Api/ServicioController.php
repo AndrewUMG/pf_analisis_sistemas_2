@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Servicio;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -73,6 +75,29 @@ class ServicioController extends Controller
         $servicio->update(['activo' => false]);
 
         return response()->json(['mensaje' => 'Servicio desactivado del catálogo.']);
+    }
+
+    /** Sube o reemplaza la foto del servicio; borra la anterior si existía. */
+    public function subirImagen(Request $request, Servicio $servicio)
+    {
+        $request->validate([
+            'imagen' => 'required|image|mimes:jpg,jpeg,png,webp|max:4096',
+        ]);
+
+        if ($servicio->imagen) {
+            Storage::disk('public')->delete($this->rutaDesdeUrl($servicio->imagen));
+        }
+
+        $ruta = $request->file('imagen')->store('servicios', 'public');
+        $servicio->update(['imagen' => Storage::disk('public')->url($ruta)]);
+
+        return $servicio;
+    }
+
+    /** Convierte la URL pública guardada de vuelta a la ruta relativa del disco "public". */
+    private function rutaDesdeUrl(string $url): string
+    {
+        return Str::after(parse_url($url, PHP_URL_PATH) ?? '', '/storage/');
     }
 
     private function validarDatos(Request $request, ?int $ignorarId = null): array

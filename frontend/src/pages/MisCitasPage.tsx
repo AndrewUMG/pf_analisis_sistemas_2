@@ -74,7 +74,7 @@ export function MisCitasPage() {
             <li key={cita.id} className="tarjeta p-5">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="flex items-start gap-3">
-                  <ImagenPlaceholder variante="avatar" etiqueta="Foto" className="h-11 w-11 shrink-0" />
+                  <ImagenPlaceholder src={cita.barbero?.foto} variante="avatar" etiqueta="Foto" className="h-11 w-11 shrink-0" />
                   <div>
                     <p className="font-semibold text-text">
                       {soloFecha(cita.fecha)} · {cita.hora_inicio.slice(0, 5)}

@@ -145,7 +145,7 @@ export function WalkinPage() {
                     barberoId === barbero.id ? 'border-accent bg-accent-soft' : 'bg-surface hover:border-border-strong'
                   }`}
                 >
-                  <ImagenPlaceholder variante="avatar" etiqueta="Foto" className="h-9 w-9 shrink-0" />
+                  <ImagenPlaceholder src={barbero.foto} variante="avatar" etiqueta="Foto" className="h-9 w-9 shrink-0" />
                   <span className="text-text">
                     {barbero.user.nombres} {barbero.user.apellidos}
                   </span>

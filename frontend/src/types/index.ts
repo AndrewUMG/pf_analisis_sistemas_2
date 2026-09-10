@@ -50,6 +50,7 @@ export interface Barbero {
   id: number
   user_id: number
   especialidad: string | null
+  foto: string | null
   comision_porcentaje: string
   user: Usuario
   servicios: Servicio[]

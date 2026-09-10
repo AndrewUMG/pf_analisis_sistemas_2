@@ -1,19 +1,33 @@
 import { IconImagen, IconPersona } from './Icons'
 
 /**
- * Espacio reservado para una imagen que se agregará más adelante (foto de
- * servicio, barbero, etc.). Se muestra con un borde punteado y un ícono para
- * que sea evidente que es un placeholder y no un error de carga.
+ * Muestra la foto real cuando ya existe (src). Mientras no haya una, se
+ * muestra un espacio reservado con borde punteado e ícono, para que sea
+ * evidente que es un placeholder y no un error de carga.
  */
 export function ImagenPlaceholder({
+  src,
   variante = 'foto',
   etiqueta,
   className = '',
 }: {
+  src?: string | null
   variante?: 'foto' | 'avatar'
   etiqueta?: string
   className?: string
 }) {
+  const formaClase = variante === 'avatar' ? 'aspect-square rounded-full' : ''
+
+  if (src) {
+    return (
+      <img
+        src={src}
+        alt={etiqueta ?? ''}
+        className={`object-cover ${formaClase} ${className}`}
+      />
+    )
+  }
+
   if (variante === 'avatar') {
     return (
       <div className={`placeholder-imagen aspect-square rounded-full ${className}`} role="img" aria-label={etiqueta ?? 'Foto pendiente'}>
