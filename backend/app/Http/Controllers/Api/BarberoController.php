@@ -31,9 +31,21 @@ class BarberoController extends Controller
         return $query->whereHas('user', fn ($q) => $q->where('estado', 'activo'))->get();
     }
 
-    public function show(Barbero $barbero)
+    public function show(Request $request, Barbero $barbero)
     {
-        return $barbero->load(['user', 'servicios', 'horarios']);
+        $relaciones = ['user', 'servicios', 'horarios'];
+
+        // Las excepciones (vacaciones, permisos) solo se exponen al propio
+        // barbero o al administrador; el resto del público no necesita el motivo.
+        // Esta ruta es pública (sin middleware auth:sanctum), así que hay que
+        // pedirle el usuario explícitamente al guard de Sanctum: $request->user()
+        // usaría el guard por defecto y siempre devolvería null aquí.
+        $usuario = $request->user('sanctum');
+        if ($usuario && ($usuario->id === $barbero->user_id || $usuario->esAdministrador())) {
+            $relaciones[] = 'excepciones';
+        }
+
+        return $barbero->load($relaciones);
     }
 
     /** El administrador da de alta el perfil profesional de un usuario ya registrado con rol "barbero". */

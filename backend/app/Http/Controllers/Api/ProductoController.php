@@ -16,8 +16,13 @@ class ProductoController extends Controller
     {
         $query = Producto::query();
 
+        // Ruta pública (sin middleware auth:sanctum): hay que pedirle el
+        // usuario al guard de Sanctum explícitamente, $request->user() sin
+        // argumento siempre devuelve null aquí.
+        $usuario = $request->user('sanctum');
+
         // Un cliente solo ve productos activos; el personal ve todo (incluye bajas).
-        if (! $request->user() || $request->user()->rol === 'cliente') {
+        if (! $usuario || $usuario->rol === 'cliente') {
             $query->where('activo', true);
         }
 

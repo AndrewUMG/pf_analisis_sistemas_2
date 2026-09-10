@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { mensajeError } from '../api/client'
 import { Alerta } from '../components/Alerta'
 import { ImagenPlaceholder } from '../components/ImagenPlaceholder'
+import { rutaInicioPara } from '../components/RoleRoute'
 
 export function LoginPage() {
   const { iniciarSesion, cargando } = useAuth()
@@ -18,8 +19,8 @@ export function LoginPage() {
     e.preventDefault()
     setError('')
     try {
-      await iniciarSesion(email, password)
-      const destino = (location.state as { desde?: string } | null)?.desde ?? '/'
+      const usuario = await iniciarSesion(email, password)
+      const destino = (location.state as { desde?: string } | null)?.desde ?? rutaInicioPara(usuario.rol)
       navigate(destino, { replace: true })
     } catch (err) {
       setError(mensajeError(err))

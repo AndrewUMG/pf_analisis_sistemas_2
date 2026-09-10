@@ -80,8 +80,20 @@ curl -X POST http://127.0.0.1:8000/api/auth/login \
 
 Todas las rutas quedan documentadas y agrupadas por permisos en `routes/api.php`.
 
+**Cuidado con `$request->user()` en rutas públicas.** Varias rutas son
+públicas a propósito (catálogo de servicios, de barberos, de productos) pero
+igual cambian de comportamiento si quien pregunta tiene sesión (p. ej. el
+personal ve productos inactivos, el público no). Como esas rutas no pasan
+por el middleware `auth:sanctum`, `$request->user()` sin argumento **siempre
+da `null`** ahí, aunque se envíe un token válido — hay que pedirlo
+explícitamente al guard con `$request->user('sanctum')`. Ya corregido en
+`ServicioController`, `ProductoController` y `BarberoController`; tenerlo en
+cuenta si se agregan más rutas públicas con lógica condicional a la sesión.
+
 ## 6. Estado actual y siguiente paso
 
 Implementado y probado de punta a punta: autenticación y roles (RF-05), catálogo (RF-01), reservas con control de concurrencia (RF-02), notificaciones programadas (RF-04), agenda y atención del barbero (RF-03), cancelaciones/reagendamiento (RF-06), inventario (RF-09), cobro y comisiones (RF-08), registro presencial (RF-11), valoraciones (RF-10) y reportes (RF-07).
 
-**Siguiente paso:** construir el frontend que consuma esta API — el backend ya está listo para mostrarse como avance funcional del proyecto.
+**Frontend:** el sistema ya tiene interfaz completa para los cuatro roles —
+cliente (`docs/frontend/MODULO_RESERVAS_FRONTEND.md`) y barbero/recepción/
+administrador (`docs/frontend/PANELES_INTERNOS.md`).

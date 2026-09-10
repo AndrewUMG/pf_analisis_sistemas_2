@@ -5,8 +5,8 @@ import type { Usuario } from '../types'
 interface AuthContextValue {
   usuario: Usuario | null
   cargando: boolean
-  iniciarSesion: (email: string, password: string) => Promise<void>
-  registrarse: (datos: DatosRegistro) => Promise<void>
+  iniciarSesion: (email: string, password: string) => Promise<Usuario>
+  registrarse: (datos: DatosRegistro) => Promise<Usuario>
   cerrarSesion: () => Promise<void>
 }
 
@@ -36,21 +36,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUsuario(usuario)
   }
 
-  async function iniciarSesion(email: string, password: string) {
+  async function iniciarSesion(email: string, password: string): Promise<Usuario> {
     setCargando(true)
     try {
       const { data } = await api.post('/auth/login', { email, password })
       guardarSesion(data.usuario, data.token)
+      return data.usuario
     } finally {
       setCargando(false)
     }
   }
 
-  async function registrarse(datos: DatosRegistro) {
+  async function registrarse(datos: DatosRegistro): Promise<Usuario> {
     setCargando(true)
     try {
       const { data } = await api.post('/auth/registro', datos)
       guardarSesion(data.usuario, data.token)
+      return data.usuario
     } finally {
       setCargando(false)
     }

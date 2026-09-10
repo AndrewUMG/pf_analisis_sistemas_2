@@ -16,8 +16,13 @@ class ServicioController extends Controller
     {
         $query = Servicio::query()->with('barberos.user');
 
+        // Ruta pública (sin middleware auth:sanctum): hay que pedirle el
+        // usuario al guard de Sanctum explícitamente, $request->user() sin
+        // argumento siempre devuelve null aquí.
+        $usuario = $request->user('sanctum');
+
         // Un cliente anónimo o autenticado sin rol de gestión solo ve el catálogo activo.
-        if (! $request->user() || $request->user()->rol === 'cliente') {
+        if (! $usuario || $usuario->rol === 'cliente') {
             $query->activos();
         }
 
