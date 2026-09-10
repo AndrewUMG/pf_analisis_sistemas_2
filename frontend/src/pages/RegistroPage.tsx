@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { mensajeError } from '../api/client'
 import { Alerta } from '../components/Alerta'
+import { ImagenPlaceholder } from '../components/ImagenPlaceholder'
 
 export function RegistroPage() {
   const { registrarse, cargando } = useAuth()
@@ -40,10 +41,17 @@ export function RegistroPage() {
   }
 
   return (
-    <div className="mx-auto max-w-md">
-      <div className="rounded-2xl border border-carbon-800 bg-carbon-900 p-8">
-        <h1 className="text-2xl font-semibold text-carbon-100">Crear cuenta</h1>
-        <p className="mt-1 text-sm text-carbon-400">Regístrate para reservar tu próxima cita.</p>
+    <div className="tarjeta mx-auto grid max-w-4xl grid-cols-1 overflow-hidden md:grid-cols-2">
+      <div className="hidden bg-bg-subtle p-8 md:flex md:flex-col md:justify-between">
+        <ImagenPlaceholder etiqueta="Foto del local" className="aspect-square w-full" />
+        <p className="mt-6 text-sm text-text-muted">
+          Únete y reserva tu primera cita en menos de un minuto.
+        </p>
+      </div>
+
+      <div className="p-8">
+        <h1 className="text-2xl font-semibold text-text">Crear cuenta</h1>
+        <p className="mt-1 text-sm text-text-muted">Regístrate para reservar tu próxima cita.</p>
 
         <form onSubmit={enviar} className="mt-6 space-y-4">
           {error && <Alerta tipo="error" mensaje={error} />}
@@ -99,9 +107,9 @@ export function RegistroPage() {
           </button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-carbon-400">
+        <p className="mt-6 text-center text-sm text-text-muted">
           ¿Ya tienes cuenta?{' '}
-          <Link to="/login" className="text-gold-400 hover:underline">
+          <Link to="/login" className="font-medium text-accent-hover hover:underline">
             Inicia sesión
           </Link>
         </p>
@@ -113,7 +121,7 @@ export function RegistroPage() {
 function Campo({ etiqueta, children }: { etiqueta: string; children: ReactNode }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-sm font-medium text-carbon-300">{etiqueta}</span>
+      <span className="mb-1 block text-sm font-medium text-text">{etiqueta}</span>
       {children}
     </label>
   )

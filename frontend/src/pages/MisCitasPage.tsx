@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { api, mensajeError } from '../api/client'
 import { Alerta } from '../components/Alerta'
 import { Spinner } from '../components/Spinner'
 import { EstadoBadge } from '../components/EstadoBadge'
+import { ImagenPlaceholder } from '../components/ImagenPlaceholder'
 import type { Cita, PaginaCitas } from '../types'
 
 /** El backend serializa "fecha" como datetime ISO completo; aquí solo interesa el día. */
@@ -51,38 +53,46 @@ export function MisCitasPage() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-4">
-      <h1 className="text-2xl font-semibold text-carbon-100">Mis citas</h1>
+      <h1 className="text-2xl font-semibold text-text">Mis citas</h1>
 
       {error && <Alerta tipo="error" mensaje={error} />}
 
       {citas.length === 0 ? (
-        <p className="text-carbon-400">Todavía no tienes citas reservadas.</p>
+        <div className="tarjeta flex flex-col items-center gap-4 p-10 text-center">
+          <ImagenPlaceholder etiqueta="Ilustración" className="h-28 w-28" />
+          <div>
+            <p className="font-medium text-text">Todavía no tienes citas reservadas.</p>
+            <p className="mt-1 text-sm text-text-muted">Elige un servicio y un barbero para agendar tu primera visita.</p>
+          </div>
+          <Link to="/reservar" className="btn-principal">
+            Reservar una cita
+          </Link>
+        </div>
       ) : (
         <ul className="space-y-3">
           {citas.map((cita) => (
-            <li key={cita.id} className="rounded-xl border border-carbon-800 bg-carbon-900 p-5">
+            <li key={cita.id} className="tarjeta p-5">
               <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <p className="font-semibold text-carbon-100">
-                    {soloFecha(cita.fecha)} · {cita.hora_inicio.slice(0, 5)}
-                  </p>
-                  <p className="text-sm text-carbon-400">
-                    con {cita.barbero?.user.nombres} {cita.barbero?.user.apellidos}
-                  </p>
-                  <p className="mt-1 text-sm text-carbon-300">
-                    {cita.detalles?.map((d) => d.servicio?.nombre).filter(Boolean).join(', ')}
-                  </p>
+                <div className="flex items-start gap-3">
+                  <ImagenPlaceholder variante="avatar" etiqueta="Foto" className="h-11 w-11 shrink-0" />
+                  <div>
+                    <p className="font-semibold text-text">
+                      {soloFecha(cita.fecha)} · {cita.hora_inicio.slice(0, 5)}
+                    </p>
+                    <p className="text-sm text-text-muted">
+                      con {cita.barbero?.user.nombres} {cita.barbero?.user.apellidos}
+                    </p>
+                    <p className="mt-1 text-sm text-text">
+                      {cita.detalles?.map((d) => d.servicio?.nombre).filter(Boolean).join(', ')}
+                    </p>
+                  </div>
                 </div>
                 <EstadoBadge estado={cita.estado} />
               </div>
 
               {cita.estado === 'confirmada' && (
-                <div className="mt-4 border-t border-carbon-800 pt-3">
-                  <button
-                    onClick={() => cancelar(cita)}
-                    disabled={cancelandoId === cita.id}
-                    className="text-sm font-medium text-red-400 hover:text-red-300 disabled:opacity-60"
-                  >
+                <div className="mt-4 border-t pt-3">
+                  <button onClick={() => cancelar(cita)} disabled={cancelandoId === cita.id} className="btn-texto">
                     {cancelandoId === cita.id ? 'Cancelando…' : 'Cancelar cita'}
                   </button>
                 </div>

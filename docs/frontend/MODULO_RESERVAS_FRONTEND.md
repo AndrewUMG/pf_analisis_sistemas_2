@@ -83,20 +83,46 @@ Laravel), suficiente para desarrollo local con tokens Bearer.
 
 ## 4. Decisiones de UI/UX
 
-- **Paleta oscura + dorado** (carbón/negro con acentos dorados), acorde a una
-  barbería, definida como tokens de Tailwind en `src/index.css` (`--color-carbon-*`,
-  `--color-gold-*`) para mantener consistencia en toda la app.
+- **Sistema de tokens semánticos, no colores fijos.** `src/index.css` define
+  variables como `--color-bg`, `--color-surface`, `--color-text`,
+  `--color-accent`, etc. en vez de nombres de color ("dorado", "carbón").
+  Cada componente usa clases como `bg-surface` o `text-text-muted`; el tema
+  se resuelve solo cambiando el valor de esas variables, sin tocar los
+  componentes.
+- **Tema claro por defecto, con soporte completo para oscuro.** El tema
+  principal de la marca es claro (fondo marfil, acentos en dorado quemado
+  con buen contraste). Existe un interruptor de sol/luna en la barra de
+  navegación (`ThemeContext` + `ThemeToggle`) que alterna a un tema oscuro
+  igualmente pulido, y la preferencia se recuerda en `localStorage`. Un
+  script mínimo en `index.html` fija el tema antes del primer render para
+  que no haya parpadeo de tema incorrecto al cargar la página.
+- **Espacios reservados para imágenes.** Como todavía no hay fotos reales
+  del local, el equipo o los servicios, se usa el componente
+  `ImagenPlaceholder` (rectángulos con borde punteado + ícono, o círculos
+  para avatares) en el hero, las tarjetas de servicio, el equipo de
+  barberos y el formulario de registro/login. Cuando haya fotos reales,
+  basta con reemplazar ese componente por una etiqueta `<img>` — el resto
+  del layout no cambia.
+- **Iconografía propia en SVG** (`src/components/Icons.tsx`) en vez de
+  emojis, para un acabado consistente entre sistemas operativos y
+  navegadores.
 - **Wizard paso a paso** para reservar en vez de un formulario largo: reduce
   la carga cognitiva y en cada paso solo se muestran las opciones válidas
   (p. ej. solo aparecen los barberos que sí ofrecen los servicios elegidos).
 - **Botones deshabilitados en vez de ocultos** cuando falta un dato requerido
   (p. ej. "Continuar" se activa hasta elegir un horario), para que el usuario
   siempre entienda qué le falta.
+- **Layout dividido en login/registro**: en pantallas medianas o más grandes,
+  un panel con la imagen del local acompaña el formulario, un patrón estándar
+  de páginas de autenticación que refuerza la marca sin distraer del formulario.
 - **Mensajes de error legibles**: `mensajeError()` traduce tanto errores de
   validación de Laravel (`422` con `errors`) como errores de reglas de negocio
   (`NegocioException`, `422` con `mensaje`) a un texto plano en español.
+- **Accesibilidad**: contraste AA en ambos temas, estados `:focus-visible`
+  visibles en botones y campos, `aria-label` en los placeholders de imagen
+  y en el interruptor de tema.
 - **Responsive**: layout en grilla de 1 columna en móvil y hasta 3 en pantallas
-  grandes; navegación y formularios probados a 400px de ancho.
+  grandes; navegación y formularios pensados desde 400px de ancho hacia arriba.
 
 ## 5. Verificado en este avance
 

@@ -5,6 +5,16 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Studio La Barber</title>
+    <script>
+      // Se aplica antes del primer paint para evitar el parpadeo de tema
+      // incorrecto. El tema por defecto de la app es "light".
+      try {
+        var t = localStorage.getItem('tema');
+        document.documentElement.setAttribute('data-theme', t === 'dark' ? 'dark' : 'light');
+      } catch (e) {
+        document.documentElement.setAttribute('data-theme', 'light');
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

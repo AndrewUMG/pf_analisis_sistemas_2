@@ -9,7 +9,7 @@ import { MisCitasPage } from './pages/MisCitasPage'
 
 function App() {
   return (
-    <div className="min-h-screen bg-carbon-950">
+    <div className="min-h-screen bg-bg">
       <Navbar />
       <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
         <Routes>

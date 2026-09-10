@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { mensajeError } from '../api/client'
 import { Alerta } from '../components/Alerta'
+import { ImagenPlaceholder } from '../components/ImagenPlaceholder'
 
 export function LoginPage() {
   const { iniciarSesion, cargando } = useAuth()
@@ -26,10 +27,17 @@ export function LoginPage() {
   }
 
   return (
-    <div className="mx-auto max-w-md">
-      <div className="rounded-2xl border border-carbon-800 bg-carbon-900 p-8">
-        <h1 className="text-2xl font-semibold text-carbon-100">Iniciar sesión</h1>
-        <p className="mt-1 text-sm text-carbon-400">Accede para reservar y ver tus citas.</p>
+    <div className="tarjeta mx-auto grid max-w-4xl grid-cols-1 overflow-hidden md:grid-cols-2">
+      <div className="hidden bg-bg-subtle p-8 md:flex md:flex-col md:justify-between">
+        <ImagenPlaceholder etiqueta="Foto del local" className="aspect-square w-full" />
+        <p className="mt-6 text-sm text-text-muted">
+          "Reservar mi cita nunca fue tan fácil." — así nos describen nuestros clientes.
+        </p>
+      </div>
+
+      <div className="p-8">
+        <h1 className="text-2xl font-semibold text-text">Iniciar sesión</h1>
+        <p className="mt-1 text-sm text-text-muted">Accede para reservar y ver tus citas.</p>
 
         <form onSubmit={enviar} className="mt-6 space-y-4">
           {error && <Alerta tipo="error" mensaje={error} />}
@@ -61,15 +69,15 @@ export function LoginPage() {
           </button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-carbon-400">
+        <p className="mt-6 text-center text-sm text-text-muted">
           ¿Aún no tienes cuenta?{' '}
-          <Link to="/registro" className="text-gold-400 hover:underline">
+          <Link to="/registro" className="font-medium text-accent-hover hover:underline">
             Regístrate
           </Link>
         </p>
 
-        <div className="mt-4 rounded-lg bg-carbon-800/60 p-3 text-xs text-carbon-400">
-          Demo: <code>admin@studiolabarber.local</code> / <code>password123</code>
+        <div className="mt-4 rounded-lg bg-bg-subtle p-3 text-xs text-text-muted">
+          Demo: <code className="text-text">admin@studiolabarber.local</code> / <code className="text-text">password123</code>
         </div>
       </div>
     </div>
@@ -79,7 +87,7 @@ export function LoginPage() {
 function Campo({ etiqueta, children }: { etiqueta: string; children: ReactNode }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-sm font-medium text-carbon-300">{etiqueta}</span>
+      <span className="mb-1 block text-sm font-medium text-text">{etiqueta}</span>
       {children}
     </label>
   )

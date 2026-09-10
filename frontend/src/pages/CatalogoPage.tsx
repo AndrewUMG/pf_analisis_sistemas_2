@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { api, mensajeError } from '../api/client'
 import { Spinner } from '../components/Spinner'
 import { Alerta } from '../components/Alerta'
+import { ImagenPlaceholder } from '../components/ImagenPlaceholder'
 import { useAuth } from '../context/AuthContext'
 import type { Barbero, Servicio } from '../types'
 
@@ -56,27 +57,30 @@ export function CatalogoPage() {
   if (cargando) return <Spinner etiqueta="Cargando catálogo…" />
 
   return (
-    <div className="space-y-12">
-      <section className="rounded-2xl border border-carbon-800 bg-gradient-to-br from-carbon-900 to-carbon-950 p-8 text-center sm:p-12">
-        <h1 className="text-3xl font-semibold text-carbon-100 sm:text-4xl">
-          Tu barbería, a un clic de distancia
-        </h1>
-        <p className="mx-auto mt-3 max-w-xl text-carbon-400">
-          Elige tu servicio, tu barbero favorito y reserva el horario que más te convenga. Sin filas, sin llamadas.
-        </p>
-        <button
-          onClick={irAReservar}
-          className="mt-6 rounded-lg bg-gold-500 px-6 py-3 text-sm font-semibold text-carbon-950 transition-colors hover:bg-gold-400"
-        >
-          Reservar una cita
-        </button>
+    <div className="space-y-14">
+      <section className="grid grid-cols-1 items-center gap-8 overflow-hidden rounded-2xl border bg-bg-subtle p-8 sm:p-10 md:grid-cols-2 md:gap-10">
+        <div>
+          <span className="inline-block rounded-full bg-accent-soft px-3 py-1 text-xs font-semibold uppercase tracking-wide text-accent-hover">
+            Reservas en línea
+          </span>
+          <h1 className="mt-4 text-3xl font-semibold leading-tight text-text sm:text-4xl">
+            Tu barbería, a un clic de distancia
+          </h1>
+          <p className="mt-3 max-w-md text-text-muted">
+            Elige tu servicio, tu barbero favorito y reserva el horario que más te convenga. Sin filas, sin llamadas.
+          </p>
+          <button onClick={irAReservar} className="btn-principal mt-6">
+            Reservar una cita
+          </button>
+        </div>
+        <ImagenPlaceholder etiqueta="Foto del local o del equipo" className="aspect-[4/3] w-full md:aspect-square" />
       </section>
 
       {error && <Alerta tipo="error" mensaje={error} />}
 
       <section>
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <h2 className="text-xl font-semibold text-carbon-100">Catálogo de servicios</h2>
+          <h2 className="text-xl font-semibold text-text">Catálogo de servicios</h2>
           <div className="flex flex-wrap gap-2">
             <FiltroCategoria activa={categoria === 'todas'} onClick={() => setCategoria('todas')}>
               Todas
@@ -90,26 +94,29 @@ export function CatalogoPage() {
         </div>
 
         {serviciosFiltrados.length === 0 ? (
-          <p className="text-carbon-400">No hay servicios en esta categoría por el momento.</p>
+          <p className="text-text-muted">No hay servicios en esta categoría por el momento.</p>
         ) : (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {serviciosFiltrados.map((servicio) => (
               <article
                 key={servicio.id}
-                className="flex flex-col justify-between rounded-xl border border-carbon-800 bg-carbon-900 p-5 transition-colors hover:border-gold-500/40"
+                className="tarjeta flex flex-col overflow-hidden transition-shadow hover:shadow-[var(--shadow-raised)]"
               >
-                <div>
-                  <span className="text-xs font-medium uppercase tracking-wide text-gold-400">
-                    {CATEGORIAS[servicio.categoria]}
-                  </span>
-                  <h3 className="mt-1 text-lg font-semibold text-carbon-100">{servicio.nombre}</h3>
-                  {servicio.descripcion && (
-                    <p className="mt-2 text-sm text-carbon-400">{servicio.descripcion}</p>
-                  )}
-                </div>
-                <div className="mt-4 flex items-center justify-between border-t border-carbon-800 pt-3 text-sm">
-                  <span className="text-carbon-400">{servicio.duracion_minutos} min</span>
-                  <span className="text-lg font-semibold text-gold-400">Q{Number(servicio.precio).toFixed(2)}</span>
+                <ImagenPlaceholder variante="foto" className="aspect-[16/10] w-full rounded-none border-x-0 border-t-0" />
+                <div className="flex flex-1 flex-col justify-between p-5">
+                  <div>
+                    <span className="text-xs font-medium uppercase tracking-wide text-accent-hover">
+                      {CATEGORIAS[servicio.categoria]}
+                    </span>
+                    <h3 className="mt-1 text-lg font-semibold text-text">{servicio.nombre}</h3>
+                    {servicio.descripcion && (
+                      <p className="mt-2 text-sm text-text-muted">{servicio.descripcion}</p>
+                    )}
+                  </div>
+                  <div className="mt-4 flex items-center justify-between border-t pt-3 text-sm">
+                    <span className="text-text-muted">{servicio.duracion_minutos} min</span>
+                    <span className="text-lg font-semibold text-accent-hover">Q{Number(servicio.precio).toFixed(2)}</span>
+                  </div>
                 </div>
               </article>
             ))}
@@ -118,22 +125,23 @@ export function CatalogoPage() {
       </section>
 
       <section>
-        <h2 className="mb-4 text-xl font-semibold text-carbon-100">Nuestro equipo</h2>
+        <h2 className="mb-4 text-xl font-semibold text-text">Nuestro equipo</h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {barberos.map((barbero) => (
-            <article key={barbero.id} className="flex items-start gap-4 rounded-xl border border-carbon-800 bg-carbon-900 p-5">
-              <span className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-gold-500/15 text-lg font-semibold text-gold-400">
-                {barbero.user.nombres.charAt(0)}
-                {barbero.user.apellidos.charAt(0)}
-              </span>
+            <article key={barbero.id} className="tarjeta flex items-start gap-4 p-5">
+              <ImagenPlaceholder
+                variante="avatar"
+                etiqueta="Foto"
+                className="h-14 w-14 shrink-0 text-[10px]"
+              />
               <div>
-                <h3 className="font-semibold text-carbon-100">
+                <h3 className="font-semibold text-text">
                   {barbero.user.nombres} {barbero.user.apellidos}
                 </h3>
-                <p className="text-sm text-carbon-400">{barbero.especialidad ?? 'Barbero profesional'}</p>
+                <p className="text-sm text-text-muted">{barbero.especialidad ?? 'Barbero profesional'}</p>
                 <div className="mt-2 flex flex-wrap gap-1">
                   {barbero.servicios.slice(0, 3).map((s) => (
-                    <span key={s.id} className="rounded-full bg-carbon-800 px-2 py-0.5 text-xs text-carbon-300">
+                    <span key={s.id} className="rounded-full bg-neutral-soft px-2 py-0.5 text-xs text-text-muted">
                       {s.nombre}
                     </span>
                   ))}
@@ -160,7 +168,7 @@ function FiltroCategoria({
     <button
       onClick={onClick}
       className={`rounded-full px-3 py-1.5 text-sm transition-colors ${
-        activa ? 'bg-gold-500 text-carbon-950 font-medium' : 'bg-carbon-800 text-carbon-300 hover:bg-carbon-700'
+        activa ? 'bg-accent text-text-on-accent font-medium' : 'bg-neutral-soft text-text-muted hover:bg-border-strong'
       }`}
     >
       {children}

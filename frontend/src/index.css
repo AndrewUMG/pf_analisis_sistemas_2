@@ -1,39 +1,158 @@
 @import "tailwindcss";
 
+/*
+ * Sistema de diseño por tokens semánticos (no por nombre de color).
+ * El tema claro es el principal: los valores en @theme son los que se
+ * usan por defecto. El bloque [data-theme='dark'] los sobreescribe.
+ * Como todo son custom properties reales, cualquier utilidad de Tailwind
+ * que las use (bg-bg, text-text, border-border, etc.) cambia sola de
+ * tema sin tener que escribir "dark:" en cada elemento.
+ */
 @theme {
-  --color-carbon-950: #0b0b0d;
-  --color-carbon-900: #17171a;
-  --color-carbon-800: #232326;
-  --color-carbon-700: #35353a;
-  --color-carbon-600: #4d4d54;
-  --color-carbon-400: #8a8a92;
-  --color-carbon-200: #d4d4d8;
-  --color-carbon-100: #ececee;
+  --color-bg: #fefdfb;
+  --color-bg-subtle: #f6f2ea;
+  --color-surface: #ffffff;
+  --color-surface-raised: #ffffff;
+  --color-border: #e7e0d3;
+  --color-border-strong: #d6cbb4;
 
-  --color-gold-600: #a9762f;
-  --color-gold-500: #c8923f;
-  --color-gold-400: #d9ab5c;
-  --color-gold-300: #e7c58a;
+  --color-text: #241f18;
+  --color-text-muted: #6b6255;
+  --color-text-faint: #a39a8a;
+  --color-text-on-accent: #241f18;
 
-  --font-display: 'Poppins', 'Segoe UI', sans-serif;
+  --color-accent: #a9762f;
+  --color-accent-hover: #8b5e22;
+  --color-accent-soft: #f4e7d2;
+
+  --color-danger: #a3352c;
+  --color-danger-soft: #fbeae8;
+  --color-success: #276b47;
+  --color-success-soft: #e6f4ec;
+  --color-info: #2b5e94;
+  --color-info-soft: #e8f1fa;
+  --color-neutral-soft: #efeae0;
+
+  --shadow-card: 0 1px 2px rgba(36, 31, 24, 0.04), 0 1px 12px rgba(36, 31, 24, 0.05);
+  --shadow-raised: 0 4px 16px rgba(36, 31, 24, 0.08), 0 1px 4px rgba(36, 31, 24, 0.06);
+
+  --font-display: 'Poppins', 'Segoe UI', system-ui, sans-serif;
+}
+
+:root[data-theme='dark'] {
+  --color-bg: #131211;
+  --color-bg-subtle: #1a1917;
+  --color-surface: #1e1c19;
+  --color-surface-raised: #24211d;
+  --color-border: #34302a;
+  --color-border-strong: #443e34;
+
+  --color-text: #f3efe6;
+  --color-text-muted: #b0a89a;
+  --color-text-faint: #756c5d;
+  --color-text-on-accent: #1a1611;
+
+  --color-accent: #dcae64;
+  --color-accent-hover: #e9c58a;
+  --color-accent-soft: rgba(220, 174, 100, 0.16);
+
+  --color-danger: #e5847a;
+  --color-danger-soft: rgba(229, 132, 122, 0.14);
+  --color-success: #7bd0a3;
+  --color-success-soft: rgba(123, 208, 163, 0.14);
+  --color-info: #8bb8ea;
+  --color-info-soft: rgba(139, 184, 234, 0.14);
+  --color-neutral-soft: #2a2723;
+
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.24), 0 1px 12px rgba(0, 0, 0, 0.2);
+  --shadow-raised: 0 8px 24px rgba(0, 0, 0, 0.36), 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Evita el "flash" de tema incorrecto: el atributo se fija antes del primer paint (ver main.tsx). */
+html {
+  color-scheme: light;
+}
+html[data-theme='dark'] {
+  color-scheme: dark;
 }
 
 body {
-  background-color: var(--color-carbon-950);
-  color: var(--color-carbon-100);
+  background-color: var(--color-bg);
+  color: var(--color-text);
   font-family: var(--font-display);
+}
+
+* {
+  border-color: var(--color-border);
+}
+
+::selection {
+  background-color: var(--color-accent-soft);
+  color: var(--color-text);
 }
 
 @layer components {
   .campo {
-    @apply w-full rounded-lg border border-carbon-700 bg-carbon-800 px-3 py-2 text-sm text-carbon-100 placeholder:text-carbon-600 focus:border-gold-500 focus:outline-none focus:ring-1 focus:ring-gold-500;
+    @apply w-full rounded-lg border bg-surface px-3 py-2.5 text-sm text-text transition-colors;
+    border-color: var(--color-border);
+  }
+  .campo::placeholder {
+    color: var(--color-text-faint);
+  }
+  .campo:focus {
+    outline: none;
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 3px var(--color-accent-soft);
   }
 
   .btn-principal {
-    @apply rounded-lg bg-gold-500 px-4 py-2.5 text-sm font-semibold text-carbon-950 transition-colors hover:bg-gold-400 disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50;
+    background-color: var(--color-accent);
+    color: var(--color-text-on-accent);
+  }
+  .btn-principal:hover:not(:disabled) {
+    background-color: var(--color-accent-hover);
+  }
+  .btn-principal:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
   }
 
   .btn-secundario {
-    @apply rounded-lg border border-carbon-700 px-4 py-2.5 text-sm font-medium text-carbon-200 transition-colors hover:border-gold-500 hover:text-gold-400 disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50;
+    border-color: var(--color-border-strong);
+    color: var(--color-text);
+    background-color: transparent;
+  }
+  .btn-secundario:hover:not(:disabled) {
+    border-color: var(--color-accent);
+    color: var(--color-accent-hover);
+  }
+  .btn-secundario:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  .btn-texto {
+    @apply text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50;
+    color: var(--color-danger);
+  }
+  .btn-texto:hover:not(:disabled) {
+    opacity: 0.8;
+  }
+
+  .tarjeta {
+    @apply rounded-xl border;
+    background-color: var(--color-surface);
+    border-color: var(--color-border);
+    box-shadow: var(--shadow-card);
+  }
+
+  /* Rectángulo reservado para una imagen que se agregará más adelante. */
+  .placeholder-imagen {
+    @apply flex flex-col items-center justify-center gap-1.5 rounded-lg border border-dashed text-center;
+    background-color: var(--color-bg-subtle);
+    border-color: var(--color-border-strong);
+    color: var(--color-text-faint);
   }
 }
