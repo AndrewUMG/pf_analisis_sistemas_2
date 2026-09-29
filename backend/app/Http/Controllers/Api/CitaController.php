@@ -46,9 +46,29 @@ class CitaController extends Controller
         return $query->orderByDesc('fecha')->orderByDesc('hora_inicio')->paginate(20);
     }
 
-    public function show(Cita $cita)
+    public function show(Request $request, Cita $cita)
     {
+        $this->autorizarAcceso($request, $cita);
+
         return $cita->load(['cliente', 'barbero.user', 'detalles.servicio', 'valoracion']);
+    }
+
+    /**
+     * Un cliente solo puede ver o modificar sus propias citas; un barbero solo
+     * las suyas; administración y recepción, todas. Sin esto, cualquier usuario
+     * autenticado podría cancelar la cita de otro cambiando el id en la URL.
+     */
+    private function autorizarAcceso(Request $request, Cita $cita): void
+    {
+        $usuario = $request->user();
+
+        $permitido = match (true) {
+            $usuario->esAdministrador(), $usuario->esRecepcionista() => true,
+            $usuario->esBarbero() => $usuario->barbero?->id === $cita->barbero_id,
+            default => $cita->cliente_id === $usuario->id,
+        };
+
+        abort_unless($permitido, 403, 'No tienes permiso para acceder a esta cita.');
     }
 
     /** Reserva en línea hecha por el propio cliente (CU-002). */
@@ -102,6 +122,7 @@ class CitaController extends Controller
     /** Cancela una cita confirmada respetando la anticipación mínima (RF-06, CU-006). */
     public function cancelar(Request $request, Cita $cita)
     {
+        $this->autorizarAcceso($request, $cita);
         $datos = $request->validate(['motivo' => 'nullable|string|max:255']);
 
         return $this->reservas->cancelarOReagendar($cita, 'cancelar', motivo: $datos['motivo'] ?? null);
@@ -110,6 +131,7 @@ class CitaController extends Controller
     /** Reagenda una cita confirmada a una nueva fecha/hora (RF-06, CU-006). */
     public function reagendar(Request $request, Cita $cita)
     {
+        $this->autorizarAcceso($request, $cita);
         $datos = $request->validate([
             'fecha' => 'required|date',
             'hora_inicio' => 'required|date_format:H:i',

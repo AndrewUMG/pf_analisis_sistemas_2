@@ -5,10 +5,11 @@ import { Alerta } from '../../components/Alerta'
 import { Spinner } from '../../components/Spinner'
 import { EstadoBadge } from '../../components/EstadoBadge'
 import { PageHeader } from '../../components/PageHeader'
+import { hoyLocalISO } from '../../utils/fechas'
 import type { AgendaDia, Cita } from '../../types'
 
 function hoyISO(): string {
-  return new Date().toISOString().slice(0, 10)
+  return hoyLocalISO()
 }
 
 export function AgendaPage() {

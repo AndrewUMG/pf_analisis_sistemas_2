@@ -1,25 +1,33 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api, mensajeError } from '../api/client'
 import { Alerta } from '../components/Alerta'
 import { Spinner } from '../components/Spinner'
-import { EstadoBadge } from '../components/EstadoBadge'
 import { ImagenPlaceholder } from '../components/ImagenPlaceholder'
+import { PageHeader } from '../components/PageHeader'
+import { Tabs } from '../components/Tabs'
+import { CitaCard } from '../components/citas/CitaCard'
+import { CancelarDialog } from '../components/citas/CancelarDialog'
+import { ReagendarDialog } from '../components/citas/ReagendarDialog'
+import { soloFecha } from '../utils/fechas'
 import type { Cita, PaginaCitas } from '../types'
 
-/** El backend serializa "fecha" como datetime ISO completo; aquí solo interesa el día. */
-function soloFecha(fecha: string): string {
-  return fecha.slice(0, 10)
-}
+type Pestana = 'proximas' | 'historial'
+
+const ESTADOS_ACTIVOS = ['confirmada', 'en_atencion']
+
+const claveOrden = (c: Cita) => `${soloFecha(c.fecha)} ${c.hora_inicio}`
 
 export function MisCitasPage() {
   const [citas, setCitas] = useState<Cita[]>([])
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState('')
-  const [cancelandoId, setCancelandoId] = useState<number | null>(null)
+  const [aviso, setAviso] = useState('')
+  const [pestana, setPestana] = useState<Pestana>('proximas')
+  const [aReagendar, setAReagendar] = useState<Cita | null>(null)
+  const [aCancelar, setACancelar] = useState<Cita | null>(null)
 
   async function cargar() {
-    setCargando(true)
     setError('')
     try {
       const { data } = await api.get<PaginaCitas>('/citas')
@@ -35,34 +43,70 @@ export function MisCitasPage() {
     cargar()
   }, [])
 
-  async function cancelar(cita: Cita) {
-    if (!confirm('¿Seguro que quieres cancelar esta cita?')) return
-    setCancelandoId(cita.id)
-    setError('')
-    try {
-      await api.post(`/citas/${cita.id}/cancelar`)
-      await cargar()
-    } catch (e) {
-      setError(mensajeError(e))
-    } finally {
-      setCancelandoId(null)
+  // Próximas: de la más cercana a la más lejana. Historial: de la más reciente hacia atrás.
+  const { proximas, historial } = useMemo(() => {
+    const activas = citas.filter((c) => ESTADOS_ACTIVOS.includes(c.estado))
+    const pasadas = citas.filter((c) => !ESTADOS_ACTIVOS.includes(c.estado))
+    return {
+      proximas: [...activas].sort((a, b) => claveOrden(a).localeCompare(claveOrden(b))),
+      historial: [...pasadas].sort((a, b) => claveOrden(b).localeCompare(claveOrden(a))),
     }
+  }, [citas])
+
+  function alTerminarAccion(mensaje: string) {
+    setAReagendar(null)
+    setACancelar(null)
+    setAviso(mensaje)
+    cargar()
   }
 
   if (cargando) return <Spinner etiqueta="Cargando tus citas…" />
 
+  const visibles = pestana === 'proximas' ? proximas : historial
+
   return (
-    <div className="mx-auto max-w-3xl space-y-4">
-      <h1 className="text-2xl font-semibold text-text">Mis citas</h1>
+    <div className="mx-auto max-w-3xl">
+      <PageHeader
+        titulo="Mis citas"
+        descripcion="Consulta, reagenda o cancela tus reservas."
+        accion={
+          <Link to="/reservar" className="btn-principal">
+            Reservar nueva cita
+          </Link>
+        }
+      />
 
-      {error && <Alerta tipo="error" mensaje={error} />}
+      {error && (
+        <div className="mb-4">
+          <Alerta tipo="error" mensaje={error} />
+        </div>
+      )}
+      {aviso && (
+        <div className="mb-4" role="status">
+          <Alerta tipo="exito" mensaje={aviso} />
+        </div>
+      )}
 
-      {citas.length === 0 ? (
+      <Tabs
+        pestanas={[
+          { valor: 'proximas', etiqueta: `Próximas (${proximas.length})` },
+          { valor: 'historial', etiqueta: `Historial (${historial.length})` },
+        ]}
+        activa={pestana}
+        onChange={(p) => {
+          setPestana(p)
+          setAviso('')
+        }}
+      />
+
+      {visibles.length === 0 ? (
         <div className="tarjeta flex flex-col items-center gap-4 p-10 text-center">
           <ImagenPlaceholder etiqueta="Ilustración" className="h-28 w-28" />
           <div>
-            <p className="font-medium text-text">Todavía no tienes citas reservadas.</p>
-            <p className="mt-1 text-sm text-text-muted">Elige un servicio y un barbero para agendar tu primera visita.</p>
+            <p className="font-medium text-text">
+              {pestana === 'proximas' ? 'No tienes citas próximas.' : 'Todavía no tienes citas en tu historial.'}
+            </p>
+            <p className="mt-1 text-sm text-text-muted">Elige un servicio y un barbero para agendar tu próxima visita.</p>
           </div>
           <Link to="/reservar" className="btn-principal">
             Reservar una cita
@@ -70,37 +114,14 @@ export function MisCitasPage() {
         </div>
       ) : (
         <ul className="space-y-3">
-          {citas.map((cita) => (
-            <li key={cita.id} className="tarjeta p-5">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div className="flex items-start gap-3">
-                  <ImagenPlaceholder src={cita.barbero?.foto} variante="avatar" etiqueta="Foto" className="h-11 w-11 shrink-0" />
-                  <div>
-                    <p className="font-semibold text-text">
-                      {soloFecha(cita.fecha)} · {cita.hora_inicio.slice(0, 5)}
-                    </p>
-                    <p className="text-sm text-text-muted">
-                      con {cita.barbero?.user.nombres} {cita.barbero?.user.apellidos}
-                    </p>
-                    <p className="mt-1 text-sm text-text">
-                      {cita.detalles?.map((d) => d.servicio?.nombre).filter(Boolean).join(', ')}
-                    </p>
-                  </div>
-                </div>
-                <EstadoBadge estado={cita.estado} />
-              </div>
-
-              {cita.estado === 'confirmada' && (
-                <div className="mt-4 border-t pt-3">
-                  <button onClick={() => cancelar(cita)} disabled={cancelandoId === cita.id} className="btn-texto">
-                    {cancelandoId === cita.id ? 'Cancelando…' : 'Cancelar cita'}
-                  </button>
-                </div>
-              )}
-            </li>
+          {visibles.map((cita) => (
+            <CitaCard key={cita.id} cita={cita} onReagendar={setAReagendar} onCancelar={setACancelar} />
           ))}
         </ul>
       )}
+
+      {aReagendar && <ReagendarDialog cita={aReagendar} onClose={() => setAReagendar(null)} onDone={alTerminarAccion} />}
+      {aCancelar && <CancelarDialog cita={aCancelar} onClose={() => setACancelar(null)} onDone={alTerminarAccion} />}
     </div>
   )
 }

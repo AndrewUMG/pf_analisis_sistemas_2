@@ -4,12 +4,13 @@ import { api, mensajeError } from '../api/client'
 import { Alerta } from '../components/Alerta'
 import { Spinner } from '../components/Spinner'
 import { ImagenPlaceholder } from '../components/ImagenPlaceholder'
+import { hoyLocalISO } from '../utils/fechas'
 import type { Barbero, Servicio } from '../types'
 
 const PASOS = ['Servicios', 'Barbero', 'Fecha y hora', 'Confirmar'] as const
 
 function hoyISO(): string {
-  return new Date().toISOString().slice(0, 10)
+  return hoyLocalISO()
 }
 
 export function ReservarPage() {

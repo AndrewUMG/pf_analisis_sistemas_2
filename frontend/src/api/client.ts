@@ -31,8 +31,10 @@ api.interceptors.response.use(
 export function mensajeError(error: unknown): string {
   const data = (error as { response?: { data?: ErrorApi } })?.response?.data
   if (!data) return 'Ocurrió un error inesperado. Verifica tu conexión con el servidor.'
-  if (data.errors) {
-    return Object.values(data.errors).flat().join(' ')
+  // El backend usa "errores" para validaciones; "errors" es el formato estándar de Laravel.
+  const detalle = data.errores ?? data.errors
+  if (detalle) {
+    return Object.values(detalle).flat().join(' ')
   }
   return data.mensaje ?? data.message ?? 'Ocurrió un error inesperado.'
 }

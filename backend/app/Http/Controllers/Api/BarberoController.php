@@ -140,10 +140,13 @@ class BarberoController extends Controller
             'fecha' => 'required|date',
             'servicio_ids' => 'required|array|min:1',
             'servicio_ids.*' => 'integer|exists:servicios,id',
+            'excluir_cita_id' => 'nullable|integer|exists:citas,id',
         ]);
 
         return response()->json([
-            'franjas_disponibles' => $this->reservas->disponibilidad($barbero, $datos['fecha'], $datos['servicio_ids']),
+            'franjas_disponibles' => $this->reservas->disponibilidad(
+                $barbero, $datos['fecha'], $datos['servicio_ids'], $datos['excluir_cita_id'] ?? null
+            ),
         ]);
     }
 

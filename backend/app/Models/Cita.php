@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -31,6 +32,10 @@ class Cita extends Model
         'monto_estimado',
     ];
 
+    // El frontend usa estos dos campos para mostrar u ocultar "Reagendar/Cancelar"
+    // sin tener que reproducir la regla de anticipación (y su zona horaria).
+    protected $appends = ['puede_modificar', 'anticipacion_minima_horas'];
+
     protected function casts(): array
     {
         return [
@@ -39,6 +44,23 @@ class Cita extends Model
             'inicio_atencion_at' => 'datetime',
             'fin_atencion_at' => 'datetime',
         ];
+    }
+
+    public function getAnticipacionMinimaHorasAttribute(): int
+    {
+        return ParametroSistema::obtenerEntero(ParametroSistema::ANTICIPACION_MINIMA_HORAS, 2);
+    }
+
+    /** Solo una cita confirmada y con suficiente anticipación se puede cancelar o reagendar en línea (RF-06). */
+    public function getPuedeModificarAttribute(): bool
+    {
+        if ($this->estado !== 'confirmada' || ! $this->fecha) {
+            return false;
+        }
+
+        $inicio = Carbon::parse("{$this->fecha->toDateString()} {$this->hora_inicio}");
+
+        return $inicio->gte(now()->addHours($this->anticipacion_minima_horas));
     }
 
     public function cliente(): BelongsTo

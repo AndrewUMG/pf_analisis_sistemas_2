@@ -83,7 +83,11 @@ export interface Cita {
   estado: EstadoCita
   canal_origen: 'en_linea' | 'presencial'
   notas: string | null
+  motivo_cambio?: string | null
   monto_estimado: string | null
+  /** Calculado por el backend: confirmada y con la anticipación mínima vigente (RF-06). */
+  puede_modificar?: boolean
+  anticipacion_minima_horas?: number
   cliente?: Usuario
   barbero?: Barbero
   detalles?: CitaDetalle[]
@@ -205,4 +209,5 @@ export interface ErrorApi {
   mensaje?: string
   message?: string
   errors?: Record<string, string[]>
+  errores?: Record<string, string[]>
 }

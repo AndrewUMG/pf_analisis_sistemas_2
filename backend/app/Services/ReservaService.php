@@ -29,9 +29,10 @@ class ReservaService
      * la duración total que exigen los servicios seleccionados (CU-002 paso 5).
      *
      * @param  array<int>  $servicioIds
+     * @param  int|null  $citaExcluidaId  al reagendar, la cita que se mueve no debe bloquear su propio horario
      * @return array<int, string> horas de inicio disponibles, formato H:i
      */
-    public function disponibilidad(Barbero $barbero, string $fecha, array $servicioIds): array
+    public function disponibilidad(Barbero $barbero, string $fecha, array $servicioIds, ?int $citaExcluidaId = null): array
     {
         $fechaCarbon = Carbon::parse($fecha)->startOfDay();
         $duracionTotal = $this->duracionTotalMinutos($barbero, $servicioIds);
@@ -44,7 +45,7 @@ class ReservaService
         $ventanaInicio = $fechaCarbon->copy()->setTimeFromTimeString($horario->hora_inicio);
         $ventanaFin = $fechaCarbon->copy()->setTimeFromTimeString($horario->hora_fin);
 
-        $ocupados = $this->intervalosOcupados($barbero, $fechaCarbon);
+        $ocupados = $this->intervalosOcupados($barbero, $fechaCarbon, $citaExcluidaId);
 
         $anticipacionMinima = ParametroSistema::obtenerEntero(ParametroSistema::ANTICIPACION_MINIMA_HORAS, 2);
         $noAntesDe = now()->addHours($anticipacionMinima);
@@ -147,9 +148,8 @@ class ReservaService
                 throw new NegocioException('La cita ya fue atendida, cancelada o no puede modificarse.');
             }
 
-            $inicioActual = Carbon::parse("{$cita->fecha->toDateString()} {$cita->hora_inicio}");
-            $anticipacionMinima = ParametroSistema::obtenerEntero(ParametroSistema::ANTICIPACION_MINIMA_HORAS, 2);
-            if ($inicioActual->lt(now()->addHours($anticipacionMinima))) {
+            $anticipacionMinima = $cita->anticipacion_minima_horas;
+            if (! $cita->puede_modificar) {
                 throw new NegocioException(
                     "Ya no es posible modificar esta cita en línea; comunícate directamente con la barbería (mínimo {$anticipacionMinima}h de anticipación)."
                 );
@@ -169,6 +169,14 @@ class ReservaService
             $fechaCarbon = Carbon::parse($nuevaFecha)->startOfDay();
             $inicio = $fechaCarbon->copy()->setTimeFromTimeString($nuevaHoraInicio);
             $fin = $inicio->copy()->addMinutes($duracionTotal);
+
+            // El nuevo horario también debe respetar la anticipación mínima,
+            // igual que una reserva nueva; si no, se podría "saltar" la regla reagendando.
+            if ($inicio->lt(now()->addHours($anticipacionMinima))) {
+                throw new NegocioException(
+                    "El nuevo horario debe tener al menos {$anticipacionMinima} hora(s) de anticipación."
+                );
+            }
 
             $this->asegurarFranjaLibre($barbero, $fechaCarbon, $inicio, $fin, citaExcluidaId: $cita->id);
 
@@ -265,11 +273,15 @@ class ReservaService
      *
      * @return array<int, array{0: Carbon, 1: Carbon}>
      */
-    private function intervalosOcupados(Barbero $barbero, Carbon $fechaCarbon): array
+    private function intervalosOcupados(Barbero $barbero, Carbon $fechaCarbon, ?int $citaExcluidaId = null): array
     {
         $ocupados = [];
 
-        foreach ($barbero->citas()->activas()->whereDate('fecha', $fechaCarbon)->get() as $cita) {
+        $citasDelDia = $barbero->citas()->activas()->whereDate('fecha', $fechaCarbon)
+            ->when($citaExcluidaId, fn ($q) => $q->whereKeyNot($citaExcluidaId))
+            ->get();
+
+        foreach ($citasDelDia as $cita) {
             $ocupados[] = [
                 $fechaCarbon->copy()->setTimeFromTimeString($cita->hora_inicio),
                 $fechaCarbon->copy()->setTimeFromTimeString($cita->hora_fin),

@@ -133,6 +133,20 @@ body {
     outline-offset: 2px;
   }
 
+  /* Acción destructiva confirmada (p. ej. cancelar una cita); el texto usa el color de fondo para contrastar en ambos temas. */
+  .btn-peligro {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition-opacity disabled:cursor-not-allowed disabled:opacity-50;
+    background-color: var(--color-danger);
+    color: var(--color-bg);
+  }
+  .btn-peligro:hover:not(:disabled) {
+    opacity: 0.9;
+  }
+  .btn-peligro:focus-visible {
+    outline: 2px solid var(--color-danger);
+    outline-offset: 2px;
+  }
+
   .btn-texto {
     @apply text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50;
     color: var(--color-danger);
