@@ -8,6 +8,7 @@ import { FilasSkeleton } from './components/Skeleton'
 import { HomePage } from './pages/HomePage'
 
 // Cada pantalla se descarga solo cuando se visita (el sitio público carga primero y rápido).
+const ResponsivePage = lazy(() => import('./pages/dev/ResponsivePage').then((m) => ({ default: m.ResponsivePage })))
 const ServiciosPage = lazy(() => import('./pages/ServiciosPage').then((m) => ({ default: m.ServiciosPage })))
 const LoginPage = lazy(() => import('./pages/LoginPage').then((m) => ({ default: m.LoginPage })))
 const RegistroPage = lazy(() => import('./pages/RegistroPage').then((m) => ({ default: m.RegistroPage })))
@@ -65,6 +66,7 @@ function App() {
           <Route path="/admin/notificaciones" element={<RoleRoute roles={['administrador']}><NotificacionesPage /></RoleRoute>} />
           <Route path="/admin/parametros" element={<RoleRoute roles={['administrador']}><ParametrosPage /></RoleRoute>} />
         </Route>
+        {import.meta.env.DEV && <Route path="/dev/responsive" element={<ResponsivePage />} />}
       </Routes>
     </Suspense>
   )

@@ -15,6 +15,8 @@ export function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [mayusculas, setMayusculas] = useState(false)
+  const requiereLogin = Boolean((location.state as { desde?: string } | null)?.desde)
 
   async function enviar(e: FormEvent) {
     e.preventDefault()
@@ -41,7 +43,12 @@ export function LoginPage() {
         </>
       }
     >
-      <form onSubmit={enviar} className="space-y-5" noValidate={false}>
+      <form onSubmit={enviar} className="space-y-6" noValidate={false}>
+        {requiereLogin && !error && (
+          <p className="rounded-lg bg-info-soft p-3 text-sm text-info" role="status">
+            Inicia sesión para continuar con tu reserva.
+          </p>
+        )}
         {error && (
           <div role="alert">
             <Alerta tipo="error" mensaje={error} />
@@ -49,14 +56,19 @@ export function LoginPage() {
         )}
 
         <Campo etiqueta="Correo electrónico">
-          {(p) => <input {...p} type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} className="campo" placeholder="tucorreo@ejemplo.com" />}
+          {(p) => <input {...p} type="email" required autoFocus autoComplete="email" inputMode="email" autoCapitalize="none" spellCheck={false} value={email} onChange={(e) => setEmail(e.target.value)} className="campo" placeholder="tucorreo@ejemplo.com" />}
         </Campo>
 
         <Campo etiqueta="Contraseña">
-          {(p) => <InputPassword {...p} required autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Tu contraseña" />}
+          {(p) => <InputPassword {...p} required autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} onKeyUp={(e) => setMayusculas(e.getModifierState('CapsLock'))} onBlur={() => setMayusculas(false)} placeholder="Tu contraseña" />}
         </Campo>
+        {mayusculas && (
+          <p className="-mt-4 text-xs font-medium" style={{ color: 'var(--color-danger)' }} role="status">
+            Bloq Mayús está activado.
+          </p>
+        )}
 
-        <button type="submit" disabled={cargando} className="btn-principal btn-lg w-full">
+        <button type="submit" disabled={cargando} className="btn-principal btn-lg mt-2 w-full">
           {cargando ? 'Ingresando…' : 'Iniciar sesión'}
         </button>
 
