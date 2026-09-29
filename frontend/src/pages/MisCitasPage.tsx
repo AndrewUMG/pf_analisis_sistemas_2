@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api, mensajeError } from '../api/client'
 import { Alerta } from '../components/Alerta'
-import { Spinner } from '../components/Spinner'
+import { FilasSkeleton } from '../components/Skeleton'
+import { Contenedor } from '../components/Contenedor'
 import { ImagenPlaceholder } from '../components/ImagenPlaceholder'
 import { PageHeader } from '../components/PageHeader'
 import { Tabs } from '../components/Tabs'
@@ -63,11 +64,12 @@ export function MisCitasPage() {
     cargar()
   }
 
-  if (cargando) return <Spinner etiqueta="Cargando tus citas…" />
+  if (cargando) return <Contenedor className="py-8 sm:py-12"><div className="mx-auto max-w-3xl"><FilasSkeleton cantidad={3} /></div></Contenedor>
 
   const visibles = pestana === 'proximas' ? proximas : historial
 
   return (
+    <Contenedor className="py-8 sm:py-12">
     <div className="mx-auto max-w-3xl">
       <PageHeader
         titulo="Mis citas"
@@ -127,5 +129,6 @@ export function MisCitasPage() {
       {aCancelar && <CancelarDialog cita={aCancelar} onClose={() => setACancelar(null)} onDone={alTerminarAccion} />}
       {aValorar && <ValorarDialog cita={aValorar} onClose={() => setAValorar(null)} onDone={alTerminarAccion} />}
     </div>
+    </Contenedor>
   )
 }

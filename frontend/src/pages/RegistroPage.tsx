@@ -1,26 +1,22 @@
-import { useState, type FormEvent, type ReactNode } from 'react'
+import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { mensajeError } from '../api/client'
 import { Alerta } from '../components/Alerta'
-import { ImagenPlaceholder } from '../components/ImagenPlaceholder'
+import { Campo, InputPassword } from '../components/Campo'
+import { AuthLayout } from '../components/sitio/AuthLayout'
 
 export function RegistroPage() {
   const { registrarse, cargando } = useAuth()
   const navigate = useNavigate()
 
-  const [form, setForm] = useState({
-    nombres: '',
-    apellidos: '',
-    email: '',
-    telefono: '',
-    password: '',
-    password_confirmation: '',
-  })
+  const [form, setForm] = useState({ nombres: '', apellidos: '', email: '', telefono: '', password: '', password_confirmation: '' })
   const [error, setError] = useState('')
+  const [errorConfirmacion, setErrorConfirmacion] = useState('')
 
   function actualizar(campo: keyof typeof form, valor: string) {
     setForm((f) => ({ ...f, [campo]: valor }))
+    if (campo === 'password' || campo === 'password_confirmation') setErrorConfirmacion('')
   }
 
   async function enviar(e: FormEvent) {
@@ -28,7 +24,7 @@ export function RegistroPage() {
     setError('')
 
     if (form.password !== form.password_confirmation) {
-      setError('Las contraseñas no coinciden.')
+      setErrorConfirmacion('Las contraseñas no coinciden.')
       return
     }
 
@@ -41,88 +37,51 @@ export function RegistroPage() {
   }
 
   return (
-    <div className="tarjeta mx-auto grid max-w-4xl grid-cols-1 overflow-hidden md:grid-cols-2">
-      <div className="hidden bg-bg-subtle p-8 md:flex md:flex-col md:justify-between">
-        <ImagenPlaceholder etiqueta="Foto del local" className="aspect-square w-full" />
-        <p className="mt-6 text-sm text-text-muted">
-          Únete y reserva tu primera cita en menos de un minuto.
-        </p>
-      </div>
-
-      <div className="p-8">
-        <h1 className="text-2xl font-semibold text-text">Crear cuenta</h1>
-        <p className="mt-1 text-sm text-text-muted">Regístrate para reservar tu próxima cita.</p>
-
-        <form onSubmit={enviar} className="mt-6 space-y-4">
-          {error && <Alerta tipo="error" mensaje={error} />}
-
-          <div className="grid grid-cols-2 gap-3">
-            <Campo etiqueta="Nombres">
-              <input required className="campo" value={form.nombres} onChange={(e) => actualizar('nombres', e.target.value)} />
-            </Campo>
-            <Campo etiqueta="Apellidos">
-              <input required className="campo" value={form.apellidos} onChange={(e) => actualizar('apellidos', e.target.value)} />
-            </Campo>
-          </div>
-
-          <Campo etiqueta="Correo electrónico">
-            <input
-              type="email"
-              required
-              className="campo"
-              value={form.email}
-              onChange={(e) => actualizar('email', e.target.value)}
-            />
-          </Campo>
-
-          <Campo etiqueta="Teléfono (opcional)">
-            <input className="campo" value={form.telefono} onChange={(e) => actualizar('telefono', e.target.value)} />
-          </Campo>
-
-          <div className="grid grid-cols-2 gap-3">
-            <Campo etiqueta="Contraseña">
-              <input
-                type="password"
-                required
-                minLength={8}
-                className="campo"
-                value={form.password}
-                onChange={(e) => actualizar('password', e.target.value)}
-              />
-            </Campo>
-            <Campo etiqueta="Confirmar">
-              <input
-                type="password"
-                required
-                minLength={8}
-                className="campo"
-                value={form.password_confirmation}
-                onChange={(e) => actualizar('password_confirmation', e.target.value)}
-              />
-            </Campo>
-          </div>
-
-          <button type="submit" disabled={cargando} className="btn-principal w-full">
-            {cargando ? 'Creando cuenta…' : 'Crear cuenta'}
-          </button>
-        </form>
-
-        <p className="mt-6 text-center text-sm text-text-muted">
+    <AuthLayout
+      titulo="Crea tu cuenta"
+      subtitulo="Reserva tu primera cita en menos de un minuto."
+      pie={
+        <>
           ¿Ya tienes cuenta?{' '}
-          <Link to="/login" className="font-medium text-accent-hover hover:underline">
+          <Link to="/login" className="font-semibold text-text underline decoration-accent-strong underline-offset-4">
             Inicia sesión
           </Link>
-        </p>
-      </div>
-    </div>
-  )
-}
+        </>
+      }
+    >
+      <form onSubmit={enviar} className="space-y-5">
+        {error && (
+          <div role="alert">
+            <Alerta tipo="error" mensaje={error} />
+          </div>
+        )}
 
-function Campo({ etiqueta, children }: { etiqueta: string; children: ReactNode }) {
-  return (
-    <label className="block">
-      <span className="mb-1 block text-sm font-medium text-text">{etiqueta}</span>
-      {children}
-    </label>
+        <div className="grid gap-5 sm:grid-cols-2">
+          <Campo etiqueta="Nombres">{(p) => <input {...p} required autoComplete="given-name" className="campo" value={form.nombres} onChange={(e) => actualizar('nombres', e.target.value)} />}</Campo>
+          <Campo etiqueta="Apellidos">{(p) => <input {...p} required autoComplete="family-name" className="campo" value={form.apellidos} onChange={(e) => actualizar('apellidos', e.target.value)} />}</Campo>
+        </div>
+
+        <Campo etiqueta="Correo electrónico">
+          {(p) => <input {...p} type="email" required autoComplete="email" className="campo" value={form.email} onChange={(e) => actualizar('email', e.target.value)} placeholder="tucorreo@ejemplo.com" />}
+        </Campo>
+
+        <Campo etiqueta="Teléfono (opcional)" ayuda="Lo usamos para enviarte recordatorios por WhatsApp.">
+          {(p) => <input {...p} type="tel" autoComplete="tel" inputMode="tel" className="campo" value={form.telefono} onChange={(e) => actualizar('telefono', e.target.value)} />}
+        </Campo>
+
+        <div className="grid gap-5 sm:grid-cols-2">
+          <Campo etiqueta="Contraseña" ayuda="Mínimo 8 caracteres.">
+            {(p) => <InputPassword {...p} required minLength={8} autoComplete="new-password" value={form.password} onChange={(e) => actualizar('password', e.target.value)} />}
+          </Campo>
+          <Campo etiqueta="Confirmar contraseña" error={errorConfirmacion}>
+            {(p) => <InputPassword {...p} required minLength={8} autoComplete="new-password" value={form.password_confirmation} onChange={(e) => actualizar('password_confirmation', e.target.value)} />}
+          </Campo>
+        </div>
+
+        <button type="submit" disabled={cargando} className="btn-principal btn-lg w-full">
+          {cargando ? 'Creando cuenta…' : 'Crear cuenta'}
+        </button>
+      </form>
+    </AuthLayout>
   )
 }

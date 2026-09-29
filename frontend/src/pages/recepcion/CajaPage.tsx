@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { api, mensajeError } from '../../api/client'
 import { Alerta } from '../../components/Alerta'
-import { Spinner } from '../../components/Spinner'
+import { FilasSkeleton } from '../../components/Skeleton'
 import { PageHeader } from '../../components/PageHeader'
 import type { Cita, PaginaCitas, PaginaVentas, Producto, Venta } from '../../types'
 
@@ -99,22 +99,28 @@ export function CajaPage() {
     }
   }
 
-  if (cargando) return <Spinner etiqueta="Cargando caja…" />
+  if (cargando) return <FilasSkeleton cantidad={4} />
 
   return (
-    <div className="mx-auto max-w-3xl space-y-8">
-      <PageHeader titulo="Caja" descripcion="Cobra una cita completada, productos, o ambos en un mismo recibo." />
+    <div>
+      <PageHeader eyebrow="Recepción" titulo="Caja" descripcion="Cobra una cita completada, productos, o ambos en un mismo recibo." />
 
-      {error && <Alerta tipo="error" mensaje={error} />}
+      {error && (
+        <div className="mb-4" role="alert">
+          <Alerta tipo="error" mensaje={error} />
+        </div>
+      )}
 
       {reciboUltimo && (
-        <div className="tarjeta p-5" style={{ borderColor: 'var(--color-success)' }}>
+        <div className="tarjeta mb-6 p-5" role="status" style={{ borderColor: 'var(--color-success)' }}>
           <p className="text-sm text-text-muted">Cobro registrado</p>
           <p className="text-lg font-semibold text-text">Recibo {reciboUltimo.numero_recibo}</p>
           <p className="text-2xl font-semibold text-accent-hover">Q{Number(reciboUltimo.total).toFixed(2)}</p>
         </div>
       )}
 
+    <div className="grid items-start gap-8 lg:grid-cols-[1fr_22rem]">
+     <div className="space-y-8">
       <section>
         <h2 className="mb-3 text-lg font-semibold text-text">1. Cita completada (opcional)</h2>
         {citasCompletadas.length === 0 ? (
@@ -125,6 +131,7 @@ export function CajaPage() {
               <li key={cita.id}>
                 <button
                   onClick={() => setCitaId(citaId === cita.id ? null : cita.id)}
+                  aria-pressed={citaId === cita.id}
                   className={`w-full rounded-lg border p-3 text-left text-sm transition-colors ${
                     citaId === cita.id ? 'border-accent bg-accent-soft' : 'bg-surface hover:border-border-strong'
                   }`}
@@ -156,11 +163,11 @@ export function CajaPage() {
                   <span className="text-text-muted"> · Q{Number(producto.precio).toFixed(2)}</span>
                 </span>
                 <div className="flex items-center gap-2">
-                  <button type="button" onClick={() => cambiarCantidad(producto.id, -1)} className="btn-secundario h-7 w-7 p-0">
+                  <button type="button" onClick={() => cambiarCantidad(producto.id, -1)} className="btn-secundario h-9 w-9 p-0" aria-label={`Quitar ${producto.nombre}`}>
                     −
                   </button>
                   <span className="w-6 text-center text-text">{cantidades[producto.id] ?? 0}</span>
-                  <button type="button" onClick={() => cambiarCantidad(producto.id, 1)} className="btn-secundario h-7 w-7 p-0">
+                  <button type="button" onClick={() => cambiarCantidad(producto.id, 1)} className="btn-secundario h-9 w-9 p-0" aria-label={`Agregar ${producto.nombre}`}>
                     +
                   </button>
                 </div>
@@ -170,7 +177,29 @@ export function CajaPage() {
         )}
       </section>
 
-      <section className="tarjeta space-y-3 p-5">
+      <section>
+        <h2 className="mb-3 text-lg font-semibold text-text">Ventas recientes</h2>
+        {ventasRecientes.length === 0 ? (
+          <p className="text-sm text-text-muted">Todavía no hay ventas registradas.</p>
+        ) : (
+          <ul className="space-y-2">
+            {ventasRecientes.map((venta) => (
+              <li key={venta.id} className="flex items-center justify-between rounded-lg border bg-surface p-3 text-sm">
+                <span>
+                  <span className="font-medium text-text">{venta.numero_recibo}</span>
+                  <span className="text-text-muted"> · {venta.cliente ? `${venta.cliente.nombres} ${venta.cliente.apellidos}` : 'Venta directa'}</span>
+                </span>
+                <span className={venta.estado === 'anulada' ? 'text-danger line-through' : 'font-semibold text-text'}>
+                  Q{Number(venta.total).toFixed(2)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+     </div>
+
+      <section className="tarjeta space-y-3 p-5 lg:sticky lg:top-6">
         <h2 className="text-lg font-semibold text-text">3. Cobro</h2>
         <div className="grid grid-cols-2 gap-3">
           <label className="block">
@@ -205,26 +234,7 @@ export function CajaPage() {
         </button>
       </section>
 
-      <section>
-        <h2 className="mb-3 text-lg font-semibold text-text">Ventas recientes</h2>
-        {ventasRecientes.length === 0 ? (
-          <p className="text-sm text-text-muted">Todavía no hay ventas registradas.</p>
-        ) : (
-          <ul className="space-y-2">
-            {ventasRecientes.map((venta) => (
-              <li key={venta.id} className="flex items-center justify-between rounded-lg border bg-surface p-3 text-sm">
-                <span>
-                  <span className="font-medium text-text">{venta.numero_recibo}</span>
-                  <span className="text-text-muted"> · {venta.cliente ? `${venta.cliente.nombres} ${venta.cliente.apellidos}` : 'Venta directa'}</span>
-                </span>
-                <span className={venta.estado === 'anulada' ? 'text-danger line-through' : 'font-semibold text-text'}>
-                  Q{Number(venta.total).toFixed(2)}
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+    </div>
     </div>
   )
 }

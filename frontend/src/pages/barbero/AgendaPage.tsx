@@ -2,30 +2,38 @@ import { useEffect, useState } from 'react'
 import { api, mensajeError } from '../../api/client'
 import { useAuth } from '../../context/AuthContext'
 import { Alerta } from '../../components/Alerta'
-import { Spinner } from '../../components/Spinner'
 import { EstadoBadge } from '../../components/EstadoBadge'
+import { Modal } from '../../components/Modal'
 import { PageHeader } from '../../components/PageHeader'
-import { hoyLocalISO } from '../../utils/fechas'
+import { FilasSkeleton } from '../../components/Skeleton'
+import { EstadoVacio, StatCard } from '../../components/panel/Piezas'
+import { IconCalendario, IconCheck, IconChevron, IconReloj } from '../../components/Icons'
+import { formatoFechaLarga, formatoHora, hoyLocalISO } from '../../utils/fechas'
 import type { AgendaDia, Cita } from '../../types'
 
-function hoyISO(): string {
-  return hoyLocalISO()
+function moverDia(iso: string, delta: number): string {
+  const [a, m, d] = iso.split('-').map(Number)
+  const f = new Date(a, m - 1, d + delta)
+  return `${f.getFullYear()}-${String(f.getMonth() + 1).padStart(2, '0')}-${String(f.getDate()).padStart(2, '0')}`
 }
+
+const mayuscula = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 
 export function AgendaPage() {
   const { usuario } = useAuth()
   const barberoId = usuario?.barbero?.id
 
-  const [fecha, setFecha] = useState(hoyISO())
+  const [fecha, setFecha] = useState(hoyLocalISO())
   const [agenda, setAgenda] = useState<AgendaDia | null>(null)
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState('')
+  const [aviso, setAviso] = useState('')
   const [procesandoId, setProcesandoId] = useState<number | null>(null)
+  const [confirmarInicio, setConfirmarInicio] = useState<Cita | null>(null)
+  const [confirmarAusente, setConfirmarAusente] = useState<Cita | null>(null)
 
   async function cargar() {
     if (!barberoId) return
-    setCargando(true)
-    setError('')
     try {
       const { data } = await api.get<AgendaDia>(`/barberos/${barberoId}/agenda`, { params: { fecha } })
       setAgenda(data)
@@ -37,23 +45,24 @@ export function AgendaPage() {
   }
 
   useEffect(() => {
+    setCargando(true)
+    setError('')
+    setAviso('')
     cargar()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fecha, barberoId])
 
-  async function iniciar(cita: Cita, confirmarInicioTemprano = false) {
+  async function iniciar(cita: Cita, temprano = false) {
     setProcesandoId(cita.id)
     setError('')
     try {
-      await api.post(`/citas/${cita.id}/iniciar`, { confirmar_inicio_temprano: confirmarInicioTemprano })
+      await api.post(`/citas/${cita.id}/iniciar`, { confirmar_inicio_temprano: temprano })
+      setConfirmarInicio(null)
       await cargar()
     } catch (e) {
-      const detalles = (e as { response?: { data?: { requiere_confirmacion?: boolean } } })?.response?.data
-      if (detalles?.requiere_confirmacion && confirm('Esta cita inicia con mucha anticipación respecto a lo programado. ¿Iniciar de todas formas?')) {
-        await iniciar(cita, true)
-        return
-      }
-      setError(mensajeError(e))
+      const detalles = (e as { response?: { data?: { detalles?: { requiere_confirmacion?: boolean } } } })?.response?.data?.detalles
+      if (detalles?.requiere_confirmacion) setConfirmarInicio(cita)
+      else setError(mensajeError(e))
     } finally {
       setProcesandoId(null)
     }
@@ -62,9 +71,10 @@ export function AgendaPage() {
   async function finalizar(cita: Cita) {
     setProcesandoId(cita.id)
     setError('')
+    setAviso('')
     try {
       const { data } = await api.post(`/citas/${cita.id}/finalizar`)
-      if (data?.advertencia) setError(data.advertencia)
+      if (data?.advertencia) setAviso(data.advertencia)
       await cargar()
     } catch (e) {
       setError(mensajeError(e))
@@ -74,115 +84,135 @@ export function AgendaPage() {
   }
 
   async function marcarAusente(cita: Cita) {
-    if (!confirm('¿Confirmas que el cliente no se presentó?')) return
     setProcesandoId(cita.id)
     setError('')
     try {
       await api.post(`/citas/${cita.id}/marcar-ausente`)
+      setConfirmarAusente(null)
       await cargar()
     } catch (e) {
+      setConfirmarAusente(null)
       setError(mensajeError(e))
     } finally {
       setProcesandoId(null)
     }
   }
 
-  if (!barberoId) {
-    return <Alerta tipo="error" mensaje="Tu cuenta no tiene un perfil de barbero asociado." />
-  }
+  if (!barberoId) return <Alerta tipo="error" mensaje="Tu cuenta no tiene un perfil de barbero asociado." />
+
+  const pendientes = agenda?.citas.filter((c) => c.estado === 'confirmada' || c.estado === 'en_atencion').length ?? 0
+  const esHoy = fecha === hoyLocalISO()
 
   return (
-    <div className="mx-auto max-w-3xl">
+    <div>
       <PageHeader
+        eyebrow="Mi jornada"
         titulo="Mi agenda"
-        descripcion="Citas del día y resumen de comisiones."
+        descripcion={mayuscula(formatoFechaLarga(fecha))}
         accion={
-          <input
-            type="date"
-            value={fecha}
-            onChange={(e) => setFecha(e.target.value)}
-            className="campo w-auto"
-          />
+          <div className="flex items-center gap-2">
+            <button className="grid h-10 w-10 place-items-center rounded-lg border text-text hover:border-brand" onClick={() => setFecha(moverDia(fecha, -1))} aria-label="Día anterior">
+              <IconChevron className="h-4 w-4 rotate-180" />
+            </button>
+            <input type="date" aria-label="Fecha de la agenda" value={fecha} onChange={(e) => e.target.value && setFecha(e.target.value)} className="campo w-auto" />
+            <button className="grid h-10 w-10 place-items-center rounded-lg border text-text hover:border-brand" onClick={() => setFecha(moverDia(fecha, 1))} aria-label="Día siguiente">
+              <IconChevron className="h-4 w-4" />
+            </button>
+            {!esHoy && (
+              <button className="btn-secundario" onClick={() => setFecha(hoyLocalISO())}>
+                Hoy
+              </button>
+            )}
+          </div>
         }
       />
 
       {error && (
-        <div className="mb-4">
+        <div className="mb-4" role="alert">
           <Alerta tipo="error" mensaje={error} />
         </div>
       )}
+      {aviso && (
+        <div className="mb-4" role="status">
+          <Alerta tipo="error" mensaje={aviso} />
+        </div>
+      )}
+
+      <div className="mb-8 grid gap-4 sm:grid-cols-3">
+        <StatCard etiqueta="Citas del día" valor={agenda?.citas.length ?? '—'} icono={IconCalendario} tono="marca" />
+        <StatCard etiqueta="Por atender" valor={agenda ? pendientes : '—'} icono={IconReloj} tono="info" />
+        <StatCard etiqueta="Comisión del día" valor={agenda ? `Q${Number(agenda.comision_del_dia).toFixed(2)}` : '—'} ayuda={agenda ? `${agenda.citas_atendidas} atendidas` : undefined} icono={IconCheck} tono="acento" />
+      </div>
 
       {cargando ? (
-        <Spinner etiqueta="Cargando agenda…" />
-      ) : agenda ? (
-        <div className="space-y-6">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="tarjeta p-5">
-              <p className="text-sm text-text-muted">Citas atendidas</p>
-              <p className="mt-1 text-2xl font-semibold text-text">{agenda.citas_atendidas}</p>
-            </div>
-            <div className="tarjeta p-5">
-              <p className="text-sm text-text-muted">Comisión del día</p>
-              <p className="mt-1 text-2xl font-semibold text-accent-hover">Q{Number(agenda.comision_del_dia).toFixed(2)}</p>
-            </div>
-          </div>
-
-          {agenda.citas.length === 0 ? (
-            <p className="text-text-muted">No tienes citas programadas para esta fecha.</p>
-          ) : (
-            <ul className="space-y-3">
-              {agenda.citas.map((cita) => (
-                <li key={cita.id} className="tarjeta p-5">
+        <FilasSkeleton cantidad={3} />
+      ) : !agenda || agenda.citas.length === 0 ? (
+        <EstadoVacio icono={IconCalendario} titulo="Sin citas para este día" texto="Cuando los clientes reserven contigo, aparecerán aquí en orden." />
+      ) : (
+        <ol className="space-y-4">
+          {agenda.citas.map((c) => {
+            const activa = c.estado === 'en_atencion'
+            return (
+              <li key={c.id} className="grid gap-3 sm:grid-cols-[4.5rem_1fr] sm:gap-5">
+                <div className="flex items-baseline gap-2 sm:block sm:pt-4 sm:text-right">
+                  <p className="font-serif text-xl font-semibold leading-none text-text">{formatoHora(c.hora_inicio)}</p>
+                  <p className="text-xs text-text-muted sm:mt-1">hasta {formatoHora(c.hora_fin)}</p>
+                </div>
+                <div className="tarjeta p-4 sm:p-5" style={activa ? { borderColor: 'var(--color-accent-strong)', boxShadow: '0 0 0 1px var(--color-accent-strong), var(--shadow-card)' } : undefined}>
                   <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                      <p className="font-semibold text-text">
-                        {cita.hora_inicio.slice(0, 5)} · {cita.cliente?.nombres} {cita.cliente?.apellidos}
+                    <div className="min-w-0">
+                      <p className="text-lg font-semibold text-text">
+                        {c.cliente?.nombres} {c.cliente?.apellidos}
                       </p>
-                      <p className="mt-1 text-sm text-text-muted">
-                        {cita.detalles?.map((d) => d.servicio?.nombre).filter(Boolean).join(', ')}
-                      </p>
-                      {cita.notas && <p className="mt-1 text-sm italic text-text-faint">"{cita.notas}"</p>}
+                      <p className="text-sm text-text-muted">{c.detalles?.map((d) => d.servicio?.nombre).filter(Boolean).join(' · ')}</p>
+                      {c.notas && <p className="mt-2 rounded-lg bg-bg-subtle p-2.5 text-sm italic text-text-muted">“{c.notas}”</p>}
                     </div>
-                    <EstadoBadge estado={cita.estado} />
+                    <EstadoBadge estado={c.estado} />
                   </div>
 
-                  {(cita.estado === 'confirmada' || cita.estado === 'en_atencion') && (
+                  {(c.estado === 'confirmada' || c.estado === 'en_atencion') && (
                     <div className="mt-4 flex flex-wrap gap-2 border-t pt-3">
-                      {cita.estado === 'confirmada' && (
+                      {c.estado === 'confirmada' && (
                         <>
-                          <button
-                            onClick={() => iniciar(cita)}
-                            disabled={procesandoId === cita.id}
-                            className="btn-principal px-3 py-1.5 text-xs"
-                          >
+                          <button onClick={() => iniciar(c)} disabled={procesandoId === c.id} className="btn-principal px-4 py-2">
                             Iniciar atención
                           </button>
-                          <button
-                            onClick={() => marcarAusente(cita)}
-                            disabled={procesandoId === cita.id}
-                            className="btn-secundario px-3 py-1.5 text-xs"
-                          >
+                          <button onClick={() => setConfirmarAusente(c)} disabled={procesandoId === c.id} className="btn-secundario px-4 py-2">
                             Marcar ausente
                           </button>
                         </>
                       )}
-                      {cita.estado === 'en_atencion' && (
-                        <button
-                          onClick={() => finalizar(cita)}
-                          disabled={procesandoId === cita.id}
-                          className="btn-principal px-3 py-1.5 text-xs"
-                        >
-                          Finalizar atención
+                      {c.estado === 'en_atencion' && (
+                        <button onClick={() => finalizar(c)} disabled={procesandoId === c.id} className="btn-dorado px-4 py-2">
+                          {procesandoId === c.id ? 'Finalizando…' : 'Finalizar atención'}
                         </button>
                       )}
                     </div>
                   )}
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      ) : null}
+                </div>
+              </li>
+            )
+          })}
+        </ol>
+      )}
+
+      {confirmarInicio && (
+        <Modal titulo="Esta cita aún no toca" descripcion="Faltan más de 30 minutos para la hora programada. ¿Quieres iniciarla de todas formas?" onClose={() => setConfirmarInicio(null)}>
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <button type="button" onClick={() => setConfirmarInicio(null)} className="btn-secundario">Esperar</button>
+            <button type="button" onClick={() => iniciar(confirmarInicio, true)} className="btn-principal">Iniciar ahora</button>
+          </div>
+        </Modal>
+      )}
+
+      {confirmarAusente && (
+        <Modal titulo="¿El cliente no se presentó?" descripcion={`Se libera el horario de ${confirmarAusente.cliente?.nombres ?? 'el cliente'} y la cita queda como ausente.`} onClose={() => setConfirmarAusente(null)}>
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <button type="button" onClick={() => setConfirmarAusente(null)} className="btn-secundario">Cancelar</button>
+            <button type="button" onClick={() => marcarAusente(confirmarAusente)} className="btn-peligro">Sí, marcar ausente</button>
+          </div>
+        </Modal>
+      )}
     </div>
   )
 }

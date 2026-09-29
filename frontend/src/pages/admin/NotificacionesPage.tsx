@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { api, mensajeError } from '../../api/client'
 import { Alerta } from '../../components/Alerta'
-import { Spinner } from '../../components/Spinner'
+import { FilasSkeleton } from '../../components/Skeleton'
 import { PageHeader } from '../../components/PageHeader'
 import type { Notificacion, RespuestaNotificaciones } from '../../types'
 
@@ -84,7 +84,7 @@ export function NotificacionesPage() {
   const resumen = datos?.resumen ?? {}
 
   return (
-    <div className="mx-auto max-w-4xl">
+    <div>
       <PageHeader
         titulo="Notificaciones"
         descripcion="Confirmaciones y recordatorios automáticos enviados a los clientes."
@@ -141,7 +141,7 @@ export function NotificacionesPage() {
       </div>
 
       {cargando ? (
-        <Spinner etiqueta="Cargando notificaciones…" />
+        <FilasSkeleton cantidad={4} />
       ) : !datos || datos.notificaciones.data.length === 0 ? (
         <p className="text-text-muted">No hay notificaciones con esos filtros. Se generan al reservar una cita.</p>
       ) : (

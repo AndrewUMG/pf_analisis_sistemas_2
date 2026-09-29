@@ -23,6 +23,8 @@ export function ImagenPlaceholder({
       <img
         src={src}
         alt={etiqueta ?? ''}
+        loading="lazy"
+        decoding="async"
         className={`object-cover ${formaClase} ${className}`}
       />
     )

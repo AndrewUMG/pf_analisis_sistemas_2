@@ -1,34 +1,22 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { api, mensajeError } from '../../api/client'
 import { Alerta } from '../../components/Alerta'
-import { Spinner } from '../../components/Spinner'
-import { PageHeader } from '../../components/PageHeader'
-import { Tabs } from '../../components/Tabs'
-import { ImagenPlaceholder } from '../../components/ImagenPlaceholder'
 import { BotonSubirFoto } from '../../components/BotonSubirFoto'
+import { Campo, InputPassword } from '../../components/Campo'
+import { ImagenPlaceholder } from '../../components/ImagenPlaceholder'
+import { Modal } from '../../components/Modal'
+import { PageHeader } from '../../components/PageHeader'
+import { TarjetasSkeleton } from '../../components/Skeleton'
+import { Tabs } from '../../components/Tabs'
+import { EstadoVacio } from '../../components/panel/Piezas'
+import { IconPersonas, IconTijeras } from '../../components/Icons'
+import { CATEGORIAS } from '../../components/sitio/ServicioCard'
 import type { Barbero, Servicio } from '../../types'
 
-const CATEGORIAS: Servicio['categoria'][] = ['corte', 'barba', 'tratamiento', 'spa_facial', 'combo']
+const FORM_SERVICIO_VACIO = { nombre: '', categoria: 'corte' as Servicio['categoria'], descripcion: '', duracion_minutos: '30', precio: '', barbero_ids: [] as number[] }
+const FORM_BARBERO_VACIO = { nombres: '', apellidos: '', email: '', telefono: '', password: '', especialidad: '', comision_porcentaje: '40', servicio_ids: [] as number[] }
 
-const FORM_SERVICIO_VACIO = {
-  nombre: '',
-  categoria: 'corte' as Servicio['categoria'],
-  descripcion: '',
-  duracion_minutos: '30',
-  precio: '',
-  barbero_ids: [] as number[],
-}
-
-const FORM_BARBERO_VACIO = {
-  nombres: '',
-  apellidos: '',
-  email: '',
-  telefono: '',
-  password: '',
-  especialidad: '',
-  comision_porcentaje: '40',
-  servicio_ids: [] as number[],
-}
+const pildora = (activa: boolean) => `rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors ${activa ? 'border-brand bg-brand text-text-on-brand' : 'bg-surface text-text-muted hover:border-brand hover:text-text'}`
 
 export function CatalogoPage() {
   const [pestana, setPestana] = useState<'servicios' | 'barberos'>('servicios')
@@ -38,15 +26,11 @@ export function CatalogoPage() {
   const [error, setError] = useState('')
 
   async function cargar() {
-    setCargando(true)
     setError('')
     try {
-      const [resServicios, resBarberos] = await Promise.all([
-        api.get<Servicio[]>('/servicios'),
-        api.get<Barbero[]>('/barberos'),
-      ])
-      setServicios(resServicios.data)
-      setBarberos(resBarberos.data)
+      const [s, b] = await Promise.all([api.get<Servicio[]>('/servicios'), api.get<Barbero[]>('/barberos')])
+      setServicios(s.data)
+      setBarberos(b.data)
     } catch (e) {
       setError(mensajeError(e))
     } finally {
@@ -59,25 +43,25 @@ export function CatalogoPage() {
   }, [])
 
   return (
-    <div className="mx-auto max-w-3xl">
-      <PageHeader titulo="Catálogo" descripcion="Servicios ofrecidos y perfiles de barberos." />
+    <div>
+      <PageHeader eyebrow="Negocio" titulo="Catálogo" descripcion="Servicios ofrecidos y perfiles de barberos. Sube fotos reales para que el sitio luzca completo." />
       <Tabs
         pestanas={[
-          { valor: 'servicios', etiqueta: 'Servicios' },
-          { valor: 'barberos', etiqueta: 'Barberos' },
+          { valor: 'servicios', etiqueta: `Servicios (${servicios.length})` },
+          { valor: 'barberos', etiqueta: `Barberos (${barberos.length})` },
         ]}
         activa={pestana}
         onChange={setPestana}
       />
 
       {error && (
-        <div className="mb-4">
+        <div className="mb-4" role="alert">
           <Alerta tipo="error" mensaje={error} />
         </div>
       )}
 
       {cargando ? (
-        <Spinner etiqueta="Cargando catálogo…" />
+        <TarjetasSkeleton />
       ) : pestana === 'servicios' ? (
         <TabServicios servicios={servicios} barberos={barberos} onCambio={cargar} onError={setError} />
       ) : (
@@ -87,264 +71,185 @@ export function CatalogoPage() {
   )
 }
 
-function TabServicios({
-  servicios,
-  barberos,
-  onCambio,
-  onError,
-}: {
-  servicios: Servicio[]
-  barberos: Barbero[]
-  onCambio: () => void
-  onError: (m: string) => void
-}) {
-  const [mostrarFormulario, setMostrarFormulario] = useState(false)
-  const [editando, setEditando] = useState<Servicio | null>(null)
+function TabServicios({ servicios, barberos, onCambio, onError }: { servicios: Servicio[]; barberos: Barbero[]; onCambio: () => void; onError: (m: string) => void }) {
+  const [editando, setEditando] = useState<Servicio | 'nuevo' | null>(null)
   const [form, setForm] = useState(FORM_SERVICIO_VACIO)
   const [guardando, setGuardando] = useState(false)
+  const [aDesactivar, setADesactivar] = useState<Servicio | null>(null)
 
   function abrirCrear() {
-    setEditando(null)
     setForm(FORM_SERVICIO_VACIO)
-    setMostrarFormulario(true)
+    setEditando('nuevo')
   }
 
-  function abrirEditar(servicio: Servicio) {
-    setEditando(servicio)
+  function abrirEditar(s: Servicio) {
     setForm({
-      nombre: servicio.nombre,
-      categoria: servicio.categoria,
-      descripcion: servicio.descripcion ?? '',
-      duracion_minutos: String(servicio.duracion_minutos),
-      precio: servicio.precio,
-      barbero_ids: barberos.filter((b) => b.servicios.some((s) => s.id === servicio.id)).map((b) => b.id),
+      nombre: s.nombre,
+      categoria: s.categoria,
+      descripcion: s.descripcion ?? '',
+      duracion_minutos: String(s.duracion_minutos),
+      precio: s.precio,
+      barbero_ids: barberos.filter((b) => b.servicios.some((x) => x.id === s.id)).map((b) => b.id),
     })
-    setMostrarFormulario(true)
+    setEditando(s)
   }
 
-  function alternarBarbero(id: number) {
-    setForm((f) => ({
-      ...f,
-      barbero_ids: f.barbero_ids.includes(id) ? f.barbero_ids.filter((x) => x !== id) : [...f.barbero_ids, id],
-    }))
-  }
+  const alternar = (id: number) => setForm((f) => ({ ...f, barbero_ids: f.barbero_ids.includes(id) ? f.barbero_ids.filter((x) => x !== id) : [...f.barbero_ids, id] }))
 
   async function guardar(e: FormEvent) {
     e.preventDefault()
     setGuardando(true)
     onError('')
     try {
-      const payload = {
-        nombre: form.nombre,
-        categoria: form.categoria,
-        descripcion: form.descripcion || null,
-        duracion_minutos: Number(form.duracion_minutos),
-        precio: Number(form.precio),
-        barbero_ids: form.barbero_ids,
-      }
-      if (editando) {
-        await api.put(`/servicios/${editando.id}`, payload)
-      } else {
-        await api.post('/servicios', payload)
-      }
-      setMostrarFormulario(false)
+      const payload = { nombre: form.nombre, categoria: form.categoria, descripcion: form.descripcion || null, duracion_minutos: Number(form.duracion_minutos), precio: Number(form.precio), barbero_ids: form.barbero_ids }
+      if (editando && editando !== 'nuevo') await api.put(`/servicios/${editando.id}`, payload)
+      else await api.post('/servicios', payload)
+      setEditando(null)
       onCambio()
-    } catch (e) {
-      onError(mensajeError(e))
+    } catch (err) {
+      onError(mensajeError(err))
     } finally {
       setGuardando(false)
     }
   }
 
-  async function desactivar(servicio: Servicio) {
-    if (!confirm(`¿Quitar "${servicio.nombre}" del catálogo activo?`)) return
+  async function desactivar(s: Servicio) {
     try {
-      await api.delete(`/servicios/${servicio.id}`)
+      await api.delete(`/servicios/${s.id}`)
+      setADesactivar(null)
       onCambio()
-    } catch (e) {
-      onError(mensajeError(e))
+    } catch (err) {
+      onError(mensajeError(err))
     }
   }
 
   return (
     <div>
-      <div className="mb-4 flex justify-end">
+      <div className="mb-5 flex justify-end">
         <button onClick={abrirCrear} className="btn-principal">
           Nuevo servicio
         </button>
       </div>
 
-      {mostrarFormulario && (
-        <form onSubmit={guardar} className="tarjeta mb-6 space-y-3 p-5">
-          <h2 className="font-semibold text-text">{editando ? 'Editar servicio' : 'Nuevo servicio'}</h2>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <label className="block">
-              <span className="mb-1 block text-sm font-medium text-text">Nombre</span>
-              <input required className="campo" value={form.nombre} onChange={(e) => setForm((f) => ({ ...f, nombre: e.target.value }))} />
-            </label>
-            <label className="block">
-              <span className="mb-1 block text-sm font-medium text-text">Categoría</span>
-              <select className="campo" value={form.categoria} onChange={(e) => setForm((f) => ({ ...f, categoria: e.target.value as Servicio['categoria'] }))}>
-                {CATEGORIAS.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="block">
-              <span className="mb-1 block text-sm font-medium text-text">Duración (min)</span>
-              <input required type="number" min={1} className="campo" value={form.duracion_minutos} onChange={(e) => setForm((f) => ({ ...f, duracion_minutos: e.target.value }))} />
-            </label>
-            <label className="block">
-              <span className="mb-1 block text-sm font-medium text-text">Precio</span>
-              <input required type="number" min={0} step="0.01" className="campo" value={form.precio} onChange={(e) => setForm((f) => ({ ...f, precio: e.target.value }))} />
-            </label>
-          </div>
-          <label className="block">
-            <span className="mb-1 block text-sm font-medium text-text">Descripción (opcional)</span>
-            <textarea className="campo" rows={2} value={form.descripcion} onChange={(e) => setForm((f) => ({ ...f, descripcion: e.target.value }))} />
-          </label>
-          <div>
-            <span className="mb-1 block text-sm font-medium text-text">Barberos que lo ofrecen</span>
-            <div className="flex flex-wrap gap-2">
-              {barberos.map((b) => (
-                <button
-                  type="button"
-                  key={b.id}
-                  onClick={() => alternarBarbero(b.id)}
-                  className={`rounded-full px-3 py-1 text-xs ${
-                    form.barbero_ids.includes(b.id) ? 'bg-accent text-text-on-accent' : 'bg-neutral-soft text-text-muted'
-                  }`}
-                >
-                  {b.user.nombres} {b.user.apellidos}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="flex justify-end gap-2">
-            <button type="button" onClick={() => setMostrarFormulario(false)} className="btn-secundario">
-              Cancelar
-            </button>
-            <button type="submit" disabled={guardando} className="btn-principal">
-              {guardando ? 'Guardando…' : 'Guardar'}
-            </button>
-          </div>
-        </form>
+      {servicios.length === 0 ? (
+        <EstadoVacio icono={IconTijeras} titulo="Aún no hay servicios" texto="Crea el primero para que los clientes puedan reservar." />
+      ) : (
+        <ul className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+          {servicios.map((s) => (
+            <li key={s.id} className={`tarjeta overflow-hidden ${s.activo ? '' : 'opacity-60'}`}>
+              <ImagenPlaceholder src={s.imagen} etiqueta={s.nombre} className="aspect-[16/9] w-full rounded-none" />
+              <div className="p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <h3 className="truncate text-lg font-semibold text-text">{s.nombre}</h3>
+                    <p className="text-xs text-text-muted">
+                      {CATEGORIAS[s.categoria]} · {s.duracion_minutos} min
+                      {!s.activo && ' · inactivo'}
+                    </p>
+                  </div>
+                  <p className="shrink-0 font-serif text-xl font-semibold text-accent-hover">Q{Number(s.precio).toFixed(2)}</p>
+                </div>
+                <div className="mt-4 flex flex-wrap items-center gap-2 border-t pt-3">
+                  <BotonSubirFoto
+                    etiqueta={s.imagen ? 'Cambiar foto' : 'Subir foto'}
+                    onError={onError}
+                    onSubir={async (archivo) => {
+                      const datos = new FormData()
+                      datos.append('imagen', archivo)
+                      await api.post(`/servicios/${s.id}/imagen`, datos)
+                      onCambio()
+                    }}
+                  />
+                  <button onClick={() => abrirEditar(s)} className="btn-secundario px-3 py-1.5 text-xs">Editar</button>
+                  {s.activo && <button onClick={() => setADesactivar(s)} className="btn-texto ml-auto px-2 text-xs">Desactivar</button>}
+                </div>
+              </div>
+            </li>
+          ))}
+        </ul>
       )}
 
-      <ul className="space-y-2">
-        {servicios.map((servicio) => (
-          <li key={servicio.id} className="tarjeta flex flex-wrap items-center gap-4 p-4">
-            <ImagenPlaceholder src={servicio.imagen} etiqueta="Foto" className="h-14 w-14 shrink-0 rounded-lg" />
-            <div className="flex-1">
-              <p className="font-medium text-text">
-                {servicio.nombre}
-                {!servicio.activo && <span className="ml-2 text-xs text-text-faint">(inactivo)</span>}
-              </p>
-              <p className="text-sm text-text-muted">
-                {servicio.categoria} · {servicio.duracion_minutos} min · Q{Number(servicio.precio).toFixed(2)}
-              </p>
+      {editando && (
+        <Modal titulo={editando === 'nuevo' ? 'Nuevo servicio' : 'Editar servicio'} onClose={() => setEditando(null)}>
+          <form onSubmit={guardar} className="space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Campo etiqueta="Nombre">{(p) => <input {...p} required className="campo" value={form.nombre} onChange={(e) => setForm((f) => ({ ...f, nombre: e.target.value }))} />}</Campo>
+              <Campo etiqueta="Categoría">
+                {(p) => (
+                  <select {...p} className="campo" value={form.categoria} onChange={(e) => setForm((f) => ({ ...f, categoria: e.target.value as Servicio['categoria'] }))}>
+                    {Object.entries(CATEGORIAS).map(([v, l]) => (
+                      <option key={v} value={v}>{l}</option>
+                    ))}
+                  </select>
+                )}
+              </Campo>
+              <Campo etiqueta="Duración (min)">{(p) => <input {...p} required type="number" min={1} className="campo" value={form.duracion_minutos} onChange={(e) => setForm((f) => ({ ...f, duracion_minutos: e.target.value }))} />}</Campo>
+              <Campo etiqueta="Precio (Q)">{(p) => <input {...p} required type="number" min={0} step="0.01" inputMode="decimal" className="campo" value={form.precio} onChange={(e) => setForm((f) => ({ ...f, precio: e.target.value }))} />}</Campo>
             </div>
-            <div className="flex gap-2">
-              <BotonSubirFoto
-                etiqueta={servicio.imagen ? 'Cambiar foto' : 'Subir foto'}
-                onError={onError}
-                onSubir={async (archivo) => {
-                  const datos = new FormData()
-                  datos.append('imagen', archivo)
-                  await api.post(`/servicios/${servicio.id}/imagen`, datos)
-                  onCambio()
-                }}
-              />
-              <button onClick={() => abrirEditar(servicio)} className="btn-secundario px-3 py-1.5 text-xs">
-                Editar
-              </button>
-              {servicio.activo && (
-                <button onClick={() => desactivar(servicio)} className="btn-texto px-1 text-xs">
-                  Desactivar
-                </button>
-              )}
+            <Campo etiqueta="Descripción (opcional)">{(p) => <textarea {...p} rows={2} className="campo" value={form.descripcion} onChange={(e) => setForm((f) => ({ ...f, descripcion: e.target.value }))} />}</Campo>
+            <fieldset>
+              <legend className="mb-2 text-sm font-medium text-text">Barberos que lo ofrecen</legend>
+              <div className="flex flex-wrap gap-2">
+                {barberos.map((b) => (
+                  <button type="button" key={b.id} aria-pressed={form.barbero_ids.includes(b.id)} onClick={() => alternar(b.id)} className={pildora(form.barbero_ids.includes(b.id))}>
+                    {b.user.nombres} {b.user.apellidos}
+                  </button>
+                ))}
+              </div>
+            </fieldset>
+            <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-end">
+              <button type="button" onClick={() => setEditando(null)} className="btn-secundario">Cancelar</button>
+              <button type="submit" disabled={guardando} className="btn-principal">{guardando ? 'Guardando…' : 'Guardar'}</button>
             </div>
-          </li>
-        ))}
-      </ul>
+          </form>
+        </Modal>
+      )}
+
+      {aDesactivar && (
+        <Modal titulo={`¿Quitar “${aDesactivar.nombre}” del catálogo?`} descripcion="Los clientes ya no podrán reservarlo, pero se conserva el historial de citas." onClose={() => setADesactivar(null)}>
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <button type="button" onClick={() => setADesactivar(null)} className="btn-secundario">Cancelar</button>
+            <button type="button" onClick={() => desactivar(aDesactivar)} className="btn-peligro">Sí, quitar</button>
+          </div>
+        </Modal>
+      )}
     </div>
   )
 }
 
-function TabBarberos({
-  barberos,
-  servicios,
-  onCambio,
-  onError,
-}: {
-  barberos: Barbero[]
-  servicios: Servicio[]
-  onCambio: () => void
-  onError: (m: string) => void
-}) {
-  const [mostrarFormulario, setMostrarFormulario] = useState(false)
-  const [editando, setEditando] = useState<Barbero | null>(null)
+function TabBarberos({ barberos, servicios, onCambio, onError }: { barberos: Barbero[]; servicios: Servicio[]; onCambio: () => void; onError: (m: string) => void }) {
+  const [editando, setEditando] = useState<Barbero | 'nuevo' | null>(null)
   const [form, setForm] = useState(FORM_BARBERO_VACIO)
   const [guardando, setGuardando] = useState(false)
 
   function abrirCrear() {
-    setEditando(null)
     setForm(FORM_BARBERO_VACIO)
-    setMostrarFormulario(true)
+    setEditando('nuevo')
   }
 
-  function abrirEditar(barbero: Barbero) {
-    setEditando(barbero)
-    setForm({
-      ...FORM_BARBERO_VACIO,
-      especialidad: barbero.especialidad ?? '',
-      comision_porcentaje: barbero.comision_porcentaje,
-      servicio_ids: barbero.servicios.map((s) => s.id),
-    })
-    setMostrarFormulario(true)
+  function abrirEditar(b: Barbero) {
+    setForm({ ...FORM_BARBERO_VACIO, especialidad: b.especialidad ?? '', comision_porcentaje: b.comision_porcentaje, servicio_ids: b.servicios.map((s) => s.id) })
+    setEditando(b)
   }
 
-  function alternarServicio(id: number) {
-    setForm((f) => ({
-      ...f,
-      servicio_ids: f.servicio_ids.includes(id) ? f.servicio_ids.filter((x) => x !== id) : [...f.servicio_ids, id],
-    }))
-  }
+  const alternar = (id: number) => setForm((f) => ({ ...f, servicio_ids: f.servicio_ids.includes(id) ? f.servicio_ids.filter((x) => x !== id) : [...f.servicio_ids, id] }))
 
   async function guardar(e: FormEvent) {
     e.preventDefault()
     setGuardando(true)
     onError('')
     try {
-      if (editando) {
-        await api.put(`/barberos/${editando.id}`, {
-          especialidad: form.especialidad || null,
-          comision_porcentaje: Number(form.comision_porcentaje),
-          servicio_ids: form.servicio_ids,
-        })
+      if (editando && editando !== 'nuevo') {
+        await api.put(`/barberos/${editando.id}`, { especialidad: form.especialidad || null, comision_porcentaje: Number(form.comision_porcentaje), servicio_ids: form.servicio_ids })
       } else {
         // Un barbero nuevo requiere primero una cuenta de usuario con rol "barbero".
-        const { data: usuario } = await api.post('/usuarios', {
-          nombres: form.nombres,
-          apellidos: form.apellidos,
-          email: form.email,
-          telefono: form.telefono || undefined,
-          password: form.password,
-          rol: 'barbero',
-        })
-        await api.post('/barberos', {
-          user_id: usuario.id,
-          especialidad: form.especialidad || null,
-          comision_porcentaje: Number(form.comision_porcentaje),
-          servicio_ids: form.servicio_ids,
-        })
+        const { data: usuario } = await api.post('/usuarios', { nombres: form.nombres, apellidos: form.apellidos, email: form.email, telefono: form.telefono || undefined, password: form.password, rol: 'barbero' })
+        await api.post('/barberos', { user_id: usuario.id, especialidad: form.especialidad || null, comision_porcentaje: Number(form.comision_porcentaje), servicio_ids: form.servicio_ids })
       }
-      setMostrarFormulario(false)
+      setEditando(null)
       onCambio()
-    } catch (e) {
-      onError(mensajeError(e))
+    } catch (err) {
+      onError(mensajeError(err))
     } finally {
       setGuardando(false)
     }
@@ -352,111 +257,81 @@ function TabBarberos({
 
   return (
     <div>
-      <div className="mb-4 flex justify-end">
+      <div className="mb-5 flex justify-end">
         <button onClick={abrirCrear} className="btn-principal">
           Nuevo barbero
         </button>
       </div>
 
-      {mostrarFormulario && (
-        <form onSubmit={guardar} className="tarjeta mb-6 space-y-3 p-5">
-          <h2 className="font-semibold text-text">{editando ? 'Editar barbero' : 'Nuevo barbero'}</h2>
-
-          {!editando && (
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <label className="block">
-                <span className="mb-1 block text-sm font-medium text-text">Nombres</span>
-                <input required className="campo" value={form.nombres} onChange={(e) => setForm((f) => ({ ...f, nombres: e.target.value }))} />
-              </label>
-              <label className="block">
-                <span className="mb-1 block text-sm font-medium text-text">Apellidos</span>
-                <input required className="campo" value={form.apellidos} onChange={(e) => setForm((f) => ({ ...f, apellidos: e.target.value }))} />
-              </label>
-              <label className="block">
-                <span className="mb-1 block text-sm font-medium text-text">Correo</span>
-                <input required type="email" className="campo" value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} />
-              </label>
-              <label className="block">
-                <span className="mb-1 block text-sm font-medium text-text">Teléfono</span>
-                <input className="campo" value={form.telefono} onChange={(e) => setForm((f) => ({ ...f, telefono: e.target.value }))} />
-              </label>
-              <label className="block">
-                <span className="mb-1 block text-sm font-medium text-text">Contraseña temporal</span>
-                <input required type="password" minLength={8} className="campo" value={form.password} onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))} />
-              </label>
-            </div>
-          )}
-
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <label className="block">
-              <span className="mb-1 block text-sm font-medium text-text">Especialidad</span>
-              <input className="campo" value={form.especialidad} onChange={(e) => setForm((f) => ({ ...f, especialidad: e.target.value }))} />
-            </label>
-            <label className="block">
-              <span className="mb-1 block text-sm font-medium text-text">Comisión (%)</span>
-              <input required type="number" min={0} max={100} className="campo" value={form.comision_porcentaje} onChange={(e) => setForm((f) => ({ ...f, comision_porcentaje: e.target.value }))} />
-            </label>
-          </div>
-
-          <div>
-            <span className="mb-1 block text-sm font-medium text-text">Servicios que presta</span>
-            <div className="flex flex-wrap gap-2">
-              {servicios.map((s) => (
-                <button
-                  type="button"
-                  key={s.id}
-                  onClick={() => alternarServicio(s.id)}
-                  className={`rounded-full px-3 py-1 text-xs ${
-                    form.servicio_ids.includes(s.id) ? 'bg-accent text-text-on-accent' : 'bg-neutral-soft text-text-muted'
-                  }`}
-                >
-                  {s.nombre}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="flex justify-end gap-2">
-            <button type="button" onClick={() => setMostrarFormulario(false)} className="btn-secundario">
-              Cancelar
-            </button>
-            <button type="submit" disabled={guardando} className="btn-principal">
-              {guardando ? 'Guardando…' : 'Guardar'}
-            </button>
-          </div>
-        </form>
+      {barberos.length === 0 ? (
+        <EstadoVacio icono={IconPersonas} titulo="Aún no hay barberos" texto="Da de alta al primero para que aparezca en la reserva." />
+      ) : (
+        <ul className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+          {barberos.map((b) => (
+            <li key={b.id} className="tarjeta overflow-hidden">
+              <ImagenPlaceholder src={b.foto} etiqueta={`Foto de ${b.user.nombres}`} className="aspect-[5/4] w-full rounded-none" />
+              <div className="p-4">
+                <h3 className="text-lg font-semibold text-text">{b.user.nombres} {b.user.apellidos}</h3>
+                <p className="text-sm text-text-muted">{b.especialidad ?? 'Sin especialidad'} · Comisión {Number(b.comision_porcentaje)}%</p>
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {b.servicios.map((s) => (
+                    <span key={s.id} className="badge bg-neutral-soft text-text-muted">{s.nombre}</span>
+                  ))}
+                </div>
+                <div className="mt-4 flex flex-wrap items-center gap-2 border-t pt-3">
+                  <BotonSubirFoto
+                    etiqueta={b.foto ? 'Cambiar foto' : 'Subir foto'}
+                    onError={onError}
+                    onSubir={async (archivo) => {
+                      const datos = new FormData()
+                      datos.append('foto', archivo)
+                      await api.post(`/barberos/${b.id}/foto`, datos)
+                      onCambio()
+                    }}
+                  />
+                  <button onClick={() => abrirEditar(b)} className="btn-secundario px-3 py-1.5 text-xs">Editar</button>
+                </div>
+              </div>
+            </li>
+          ))}
+        </ul>
       )}
 
-      <ul className="space-y-2">
-        {barberos.map((barbero) => (
-          <li key={barbero.id} className="tarjeta flex items-center gap-4 p-4">
-            <ImagenPlaceholder src={barbero.foto} variante="avatar" etiqueta="Foto" className="h-11 w-11 shrink-0" />
-            <div className="flex-1">
-              <p className="font-medium text-text">
-                {barbero.user.nombres} {barbero.user.apellidos}
-              </p>
-              <p className="text-sm text-text-muted">
-                {barbero.especialidad ?? 'Sin especialidad'} · Comisión {Number(barbero.comision_porcentaje)}%
-              </p>
+      {editando && (
+        <Modal titulo={editando === 'nuevo' ? 'Nuevo barbero' : 'Editar barbero'} descripcion={editando === 'nuevo' ? 'Se crea su cuenta de acceso y su perfil profesional.' : undefined} onClose={() => setEditando(null)}>
+          <form onSubmit={guardar} className="space-y-4">
+            {editando === 'nuevo' && (
+              <>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Campo etiqueta="Nombres">{(p) => <input {...p} required className="campo" value={form.nombres} onChange={(e) => setForm((f) => ({ ...f, nombres: e.target.value }))} />}</Campo>
+                  <Campo etiqueta="Apellidos">{(p) => <input {...p} required className="campo" value={form.apellidos} onChange={(e) => setForm((f) => ({ ...f, apellidos: e.target.value }))} />}</Campo>
+                  <Campo etiqueta="Correo">{(p) => <input {...p} required type="email" className="campo" value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} />}</Campo>
+                  <Campo etiqueta="Teléfono">{(p) => <input {...p} className="campo" value={form.telefono} onChange={(e) => setForm((f) => ({ ...f, telefono: e.target.value }))} />}</Campo>
+                </div>
+                <Campo etiqueta="Contraseña temporal" ayuda="Mínimo 8 caracteres.">{(p) => <InputPassword {...p} required minLength={8} value={form.password} onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))} />}</Campo>
+              </>
+            )}
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Campo etiqueta="Especialidad">{(p) => <input {...p} className="campo" value={form.especialidad} onChange={(e) => setForm((f) => ({ ...f, especialidad: e.target.value }))} />}</Campo>
+              <Campo etiqueta="Comisión (%)">{(p) => <input {...p} required type="number" min={0} max={100} className="campo" value={form.comision_porcentaje} onChange={(e) => setForm((f) => ({ ...f, comision_porcentaje: e.target.value }))} />}</Campo>
             </div>
-            <div className="flex gap-2">
-              <BotonSubirFoto
-                etiqueta={barbero.foto ? 'Cambiar foto' : 'Subir foto'}
-                onError={onError}
-                onSubir={async (archivo) => {
-                  const datos = new FormData()
-                  datos.append('foto', archivo)
-                  await api.post(`/barberos/${barbero.id}/foto`, datos)
-                  onCambio()
-                }}
-              />
-              <button onClick={() => abrirEditar(barbero)} className="btn-secundario px-3 py-1.5 text-xs">
-                Editar
-              </button>
+            <fieldset>
+              <legend className="mb-2 text-sm font-medium text-text">Servicios que presta</legend>
+              <div className="flex flex-wrap gap-2">
+                {servicios.map((s) => (
+                  <button type="button" key={s.id} aria-pressed={form.servicio_ids.includes(s.id)} onClick={() => alternar(s.id)} className={pildora(form.servicio_ids.includes(s.id))}>
+                    {s.nombre}
+                  </button>
+                ))}
+              </div>
+            </fieldset>
+            <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-end">
+              <button type="button" onClick={() => setEditando(null)} className="btn-secundario">Cancelar</button>
+              <button type="submit" disabled={guardando} className="btn-principal">{guardando ? 'Guardando…' : 'Guardar'}</button>
             </div>
-          </li>
-        ))}
-      </ul>
+          </form>
+        </Modal>
+      )}
     </div>
   )
 }

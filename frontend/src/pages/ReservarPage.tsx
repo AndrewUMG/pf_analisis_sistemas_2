@@ -1,21 +1,33 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom'
 import { api, mensajeError } from '../api/client'
 import { Alerta } from '../components/Alerta'
-import { Spinner } from '../components/Spinner'
+import { Contenedor } from '../components/Contenedor'
 import { ImagenPlaceholder } from '../components/ImagenPlaceholder'
 import { ResumenValoracion } from '../components/Estrellas'
+import { FilasSkeleton, Skeleton } from '../components/Skeleton'
+import { IconCheck, IconReloj } from '../components/Icons'
+import { Pasos } from '../components/reserva/Pasos'
+import { SelectorDia } from '../components/reserva/SelectorDia'
+import { ResumenReserva, duracionDe, totalDe } from '../components/reserva/ResumenReserva'
+import { ReservaExito } from '../components/reserva/ReservaExito'
 import { hoyLocalISO } from '../utils/fechas'
-import type { Barbero, Servicio } from '../types'
+import type { Barbero, Cita, Servicio } from '../types'
 
 const PASOS = ['Servicios', 'Barbero', 'Fecha y hora', 'Confirmar'] as const
 
-function hoyISO(): string {
-  return hoyLocalISO()
+/** Agrupa las franjas del día para que la lista larga sea más fácil de escanear. */
+function agruparFranjas(franjas: string[]) {
+  const grupos = [
+    { titulo: 'Mañana', horas: franjas.filter((f) => Number(f.slice(0, 2)) < 12) },
+    { titulo: 'Tarde', horas: franjas.filter((f) => Number(f.slice(0, 2)) >= 12 && Number(f.slice(0, 2)) < 18) },
+    { titulo: 'Noche', horas: franjas.filter((f) => Number(f.slice(0, 2)) >= 18) },
+  ]
+  return grupos.filter((g) => g.horas.length > 0)
 }
 
 export function ReservarPage() {
-  const navigate = useNavigate()
+  const [params] = useSearchParams()
 
   const [paso, setPaso] = useState(0)
   const [servicios, setServicios] = useState<Servicio[]>([])
@@ -24,7 +36,7 @@ export function ReservarPage() {
 
   const [servicioIds, setServicioIds] = useState<number[]>([])
   const [barberoId, setBarberoId] = useState<number | null>(null)
-  const [fecha, setFecha] = useState(hoyISO())
+  const [fecha, setFecha] = useState(hoyLocalISO())
   const [hora, setHora] = useState<string | null>(null)
   const [notas, setNotas] = useState('')
 
@@ -32,48 +44,51 @@ export function ReservarPage() {
   const [cargandoFranjas, setCargandoFranjas] = useState(false)
   const [enviando, setEnviando] = useState(false)
   const [error, setError] = useState('')
-  const [citaCreada, setCitaCreada] = useState(false)
+  const [citaCreada, setCitaCreada] = useState<Cita | null>(null)
 
+  // Carga del catálogo y atajos desde las tarjetas del sitio (?servicio=ID, ?barbero=ID).
   useEffect(() => {
-    async function cargar() {
-      try {
-        const [resServicios, resBarberos] = await Promise.all([
-          api.get<Servicio[]>('/servicios'),
-          api.get<Barbero[]>('/barberos'),
-        ])
-        setServicios(resServicios.data)
-        setBarberos(resBarberos.data)
-      } catch (e) {
-        setError(mensajeError(e))
-      } finally {
-        setCargandoCatalogo(false)
-      }
-    }
-    cargar()
+    Promise.all([api.get<Servicio[]>('/servicios'), api.get<Barbero[]>('/barberos')])
+      .then(([s, b]) => {
+        setServicios(s.data)
+        setBarberos(b.data)
+
+        const servicioParam = Number(params.get('servicio'))
+        const barberoParam = Number(params.get('barbero'))
+        const servicio = s.data.find((x) => x.id === servicioParam)
+        const barbero = b.data.find((x) => x.id === barberoParam)
+
+        if (servicio) {
+          setServicioIds([servicio.id])
+          const ofrece = barbero?.servicios.some((x) => x.id === servicio.id)
+          if (barbero && ofrece) {
+            setBarberoId(barbero.id)
+            setPaso(2)
+          } else {
+            setPaso(1)
+          }
+        } else if (barbero) {
+          setBarberoId(barbero.id)
+        }
+      })
+      .catch((e) => setError(mensajeError(e)))
+      .finally(() => setCargandoCatalogo(false))
+    // Solo al montar: los parámetros de la URL se leen una vez.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const serviciosSeleccionados = useMemo(
-    () => servicios.filter((s) => servicioIds.includes(s.id)),
-    [servicios, servicioIds]
-  )
+  const serviciosSeleccionados = useMemo(() => servicios.filter((s) => servicioIds.includes(s.id)), [servicios, servicioIds])
 
   // Solo se muestran barberos que ofrecen TODOS los servicios elegidos (lo exige el backend).
-  const barberosDisponibles = useMemo(
-    () =>
-      barberos.filter((b) => servicioIds.every((id) => b.servicios.some((s) => s.id === id))),
-    [barberos, servicioIds]
-  )
+  const barberosDisponibles = useMemo(() => barberos.filter((b) => servicioIds.every((id) => b.servicios.some((s) => s.id === id))), [barberos, servicioIds])
 
-  const totalPrecio = serviciosSeleccionados.reduce((suma, s) => suma + Number(s.precio), 0)
-  const totalDuracion = serviciosSeleccionados.reduce((suma, s) => suma + s.duracion_minutos, 0)
+  const barberoElegido = barberos.find((b) => b.id === barberoId) ?? null
+  const gruposFranjas = useMemo(() => agruparFranjas(franjas), [franjas])
 
   function alternarServicio(id: number) {
     setServicioIds((actual) => (actual.includes(id) ? actual.filter((x) => x !== id) : [...actual, id]))
-  }
-
-  async function irAPasoFechaHora() {
-    setPaso(2)
-    await cargarFranjas(barberoId!, fecha)
+    setBarberoId(null)
+    setHora(null)
   }
 
   async function cargarFranjas(idBarbero: number, fechaConsulta: string) {
@@ -81,9 +96,7 @@ export function ReservarPage() {
     setError('')
     setHora(null)
     try {
-      const { data } = await api.get(`/barberos/${idBarbero}/disponibilidad`, {
-        params: { fecha: fechaConsulta, servicio_ids: servicioIds },
-      })
+      const { data } = await api.get(`/barberos/${idBarbero}/disponibilidad`, { params: { fecha: fechaConsulta, servicio_ids: servicioIds } })
       setFranjas(data.franjas_disponibles)
     } catch (e) {
       setError(mensajeError(e))
@@ -93,19 +106,19 @@ export function ReservarPage() {
     }
   }
 
+  // Al entrar al paso de fecha (o al cambiar el día) se consultan las franjas reales.
+  useEffect(() => {
+    if (paso === 2 && barberoId) cargarFranjas(barberoId, fecha)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paso, fecha, barberoId])
+
   async function confirmarReserva() {
     if (!barberoId || !hora) return
     setEnviando(true)
     setError('')
     try {
-      await api.post('/citas', {
-        barbero_id: barberoId,
-        fecha,
-        hora_inicio: hora,
-        servicio_ids: servicioIds,
-        notas: notas || undefined,
-      })
-      setCitaCreada(true)
+      const { data } = await api.post<Cita>('/citas', { barbero_id: barberoId, fecha, hora_inicio: hora, servicio_ids: servicioIds, notas: notas || undefined })
+      setCitaCreada(data)
     } catch (e) {
       setError(mensajeError(e))
     } finally {
@@ -113,235 +126,257 @@ export function ReservarPage() {
     }
   }
 
-  if (cargandoCatalogo) return <Spinner etiqueta="Preparando el buscador de citas…" />
+  function reiniciar() {
+    setCitaCreada(null)
+    setPaso(0)
+    setServicioIds([])
+    setBarberoId(null)
+    setHora(null)
+    setNotas('')
+    setFecha(hoyLocalISO())
+  }
 
   if (citaCreada) {
     return (
-      <div className="mx-auto max-w-md rounded-2xl border p-8 text-center" style={{ backgroundColor: 'var(--color-success-soft)', borderColor: 'var(--color-success)' }}>
-        <h1 className="text-2xl font-semibold" style={{ color: 'var(--color-success)' }}>
-          ¡Cita confirmada!
-        </h1>
-        <p className="mt-2 text-sm text-text-muted">
-          Reservaste para el {fecha} a las {hora}. Te enviaremos recordatorios antes de tu cita.
-        </p>
-        <button onClick={() => navigate('/mis-citas')} className="btn-principal mt-6">
-          Ver mis citas
-        </button>
-      </div>
+      <Contenedor className="py-12 sm:py-20">
+        <ReservaExito
+          cita={citaCreada}
+          servicios={serviciosSeleccionados.map((s) => s.nombre).join(', ')}
+          barbero={barberoElegido ? `${barberoElegido.user.nombres} ${barberoElegido.user.apellidos}` : 'Tu barbero'}
+          onOtra={reiniciar}
+        />
+      </Contenedor>
     )
   }
 
-  const barberoElegido = barberos.find((b) => b.id === barberoId) ?? null
+  const resumen = { servicios: serviciosSeleccionados, barbero: barberoElegido, fecha: hora ? fecha : null, hora }
+  const puedeAvanzar = [servicioIds.length > 0, !!barberoId, !!hora, true][paso]
 
   return (
-    <div className="mx-auto max-w-3xl">
-      <Pasos actual={paso} />
+    <Contenedor className="py-8 sm:py-12">
+      <header className="max-w-2xl">
+        <p className="eyebrow">Reserva en línea</p>
+        <h1 className="mt-2 text-[clamp(1.9rem,3.6vw,2.75rem)] font-semibold text-text">Agenda tu cita</h1>
+      </header>
 
-      {error && (
-        <div className="mt-4">
-          <Alerta tipo="error" mensaje={error} />
-        </div>
-      )}
+      <div className="mt-8 max-w-3xl">
+        <Pasos etiquetas={PASOS} actual={paso} />
+      </div>
 
-      {paso === 0 && (
-        <div className="mt-6 space-y-4">
-          <h2 className="text-lg font-semibold text-text">¿Qué servicios quieres?</h2>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {servicios.map((servicio) => {
-              const elegido = servicioIds.includes(servicio.id)
-              return (
-                <button
-                  key={servicio.id}
-                  type="button"
-                  onClick={() => alternarServicio(servicio.id)}
-                  className={`flex items-center justify-between rounded-xl border p-4 text-left transition-colors ${
-                    elegido ? 'border-accent bg-accent-soft' : 'bg-surface hover:border-border-strong'
-                  }`}
-                >
-                  <span>
-                    <span className="block font-medium text-text">{servicio.nombre}</span>
-                    <span className="block text-xs text-text-muted">{servicio.duracion_minutos} min</span>
-                  </span>
-                  <span className="font-semibold text-accent-hover">Q{Number(servicio.precio).toFixed(2)}</span>
-                </button>
-              )
-            })}
-          </div>
-
-          <div className="flex items-center justify-between border-t pt-4">
-            <span className="text-sm text-text-muted">
-              {serviciosSeleccionados.length} servicio(s) · {totalDuracion} min · Q{totalPrecio.toFixed(2)}
-            </span>
-            <button
-              disabled={servicioIds.length === 0}
-              onClick={() => setPaso(1)}
-              className="btn-principal"
-            >
-              Continuar
-            </button>
-          </div>
-        </div>
-      )}
-
-      {paso === 1 && (
-        <div className="mt-6 space-y-4">
-          <h2 className="text-lg font-semibold text-text">¿Con quién prefieres tu cita?</h2>
-          {barberosDisponibles.length === 0 ? (
-            <p className="text-text-muted">Ningún barbero ofrece esa combinación de servicios. Ajusta tu selección.</p>
-          ) : (
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              {barberosDisponibles.map((barbero) => (
-                <button
-                  key={barbero.id}
-                  type="button"
-                  onClick={() => setBarberoId(barbero.id)}
-                  className={`flex items-center gap-3 rounded-xl border p-4 text-left transition-colors ${
-                    barberoId === barbero.id ? 'border-accent bg-accent-soft' : 'bg-surface hover:border-border-strong'
-                  }`}
-                >
-                  <ImagenPlaceholder src={barbero.foto} variante="avatar" etiqueta="Foto" className="h-11 w-11 shrink-0" />
-                  <span>
-                    <span className="block font-medium text-text">
-                      {barbero.user.nombres} {barbero.user.apellidos}
-                    </span>
-                    <span className="block text-xs text-text-muted">{barbero.especialidad ?? 'Barbero profesional'}</span>
-                    <span className="mt-0.5 block">
-                      <ResumenValoracion promedio={barbero.promedio_valoracion} total={barbero.total_valoraciones} />
-                    </span>
-                  </span>
-                </button>
-              ))}
+      <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_22rem] lg:items-start">
+        <section aria-labelledby="titulo-paso">
+          {error && (
+            <div className="mb-5" role="alert">
+              <Alerta tipo="error" mensaje={error} />
             </div>
           )}
 
-          <div className="flex items-center justify-between border-t pt-4">
-            <button onClick={() => setPaso(0)} className="btn-secundario">
-              Atrás
-            </button>
-            <button disabled={!barberoId} onClick={irAPasoFechaHora} className="btn-principal">
-              Continuar
-            </button>
-          </div>
-        </div>
-      )}
-
-      {paso === 2 && (
-        <div className="mt-6 space-y-4">
-          <h2 className="text-lg font-semibold text-text">Elige fecha y horario</h2>
-
-          <label className="block max-w-xs">
-            <span className="mb-1 block text-sm font-medium text-text">Fecha</span>
-            <input
-              type="date"
-              min={hoyISO()}
-              value={fecha}
-              className="campo"
-              onChange={(e) => {
-                setFecha(e.target.value)
-                cargarFranjas(barberoId!, e.target.value)
-              }}
-            />
-          </label>
-
-          {cargandoFranjas ? (
-            <Spinner etiqueta="Buscando horarios disponibles…" />
-          ) : franjas.length === 0 ? (
-            <p className="text-text-muted">No hay horarios disponibles ese día. Prueba otra fecha.</p>
+          {cargandoCatalogo ? (
+            <FilasSkeleton cantidad={4} />
           ) : (
-            <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
-              {franjas.map((franja) => (
-                <button
-                  key={franja}
-                  type="button"
-                  onClick={() => setHora(franja)}
-                  className={`rounded-lg border py-2 text-sm transition-colors ${
-                    hora === franja ? 'border-accent bg-accent-soft text-accent-hover' : 'bg-surface text-text hover:border-border-strong'
-                  }`}
-                >
-                  {franja}
-                </button>
-              ))}
-            </div>
+            <>
+              {paso === 0 && (
+                <div>
+                  <h2 id="titulo-paso" className="text-2xl font-semibold text-text">
+                    ¿Qué servicios quieres?
+                  </h2>
+                  <p className="mt-1 text-sm text-text-muted">Puedes combinar varios; sumamos el tiempo y el precio por ti.</p>
+                  <ul className="mt-6 grid gap-3 sm:grid-cols-2">
+                    {servicios.map((s) => {
+                      const elegido = servicioIds.includes(s.id)
+                      return (
+                        <li key={s.id}>
+                          <button
+                            type="button"
+                            role="checkbox"
+                            aria-checked={elegido}
+                            onClick={() => alternarServicio(s.id)}
+                            className="relative flex w-full items-center gap-4 rounded-xl border p-3 text-left transition-all hover:-translate-y-0.5"
+                            style={{
+                              borderColor: elegido ? 'var(--color-brand)' : 'var(--color-border-strong)',
+                              backgroundColor: elegido ? 'color-mix(in srgb, var(--color-brand) 7%, var(--color-surface))' : 'var(--color-surface)',
+                              boxShadow: elegido ? '0 0 0 1px var(--color-brand)' : undefined,
+                            }}
+                          >
+                            <ImagenPlaceholder src={s.imagen} etiqueta={s.nombre} className="h-16 w-16 shrink-0 rounded-lg" />
+                            <span className="min-w-0 flex-1">
+                              <span className="block font-semibold text-text">{s.nombre}</span>
+                              <span className="mt-0.5 inline-flex items-center gap-1 text-xs text-text-muted">
+                                <IconReloj className="h-3.5 w-3.5" />
+                                {s.duracion_minutos} min
+                              </span>
+                              <span className="block font-serif text-lg font-semibold text-accent-hover">Q{Number(s.precio).toFixed(2)}</span>
+                            </span>
+                            <span
+                              className="grid h-6 w-6 shrink-0 place-items-center rounded-full border"
+                              style={{ backgroundColor: elegido ? 'var(--color-brand)' : 'transparent', borderColor: elegido ? 'var(--color-brand)' : 'var(--color-border-strong)', color: 'var(--color-text-on-brand)' }}
+                              aria-hidden="true"
+                            >
+                              {elegido && <IconCheck className="h-3.5 w-3.5" />}
+                            </span>
+                          </button>
+                        </li>
+                      )
+                    })}
+                  </ul>
+                </div>
+              )}
+
+              {paso === 1 && (
+                <div>
+                  <h2 id="titulo-paso" className="text-2xl font-semibold text-text">
+                    ¿Con quién prefieres tu cita?
+                  </h2>
+                  <p className="mt-1 text-sm text-text-muted">Estos barberos ofrecen todos los servicios que elegiste.</p>
+                  {barberosDisponibles.length === 0 ? (
+                    <p className="mt-6 rounded-xl bg-bg-subtle p-5 text-text-muted">Ningún barbero ofrece esa combinación. Vuelve atrás y ajusta tu selección.</p>
+                  ) : (
+                    <ul className="mt-6 grid gap-3 sm:grid-cols-2">
+                      {barberosDisponibles.map((b) => {
+                        const elegido = barberoId === b.id
+                        return (
+                          <li key={b.id}>
+                            <button
+                              type="button"
+                              role="radio"
+                              aria-checked={elegido}
+                              onClick={() => setBarberoId(b.id)}
+                              className="flex w-full items-center gap-4 rounded-xl border p-4 text-left transition-all hover:-translate-y-0.5"
+                              style={{
+                                borderColor: elegido ? 'var(--color-brand)' : 'var(--color-border-strong)',
+                                backgroundColor: elegido ? 'color-mix(in srgb, var(--color-brand) 7%, var(--color-surface))' : 'var(--color-surface)',
+                                boxShadow: elegido ? '0 0 0 1px var(--color-brand)' : undefined,
+                              }}
+                            >
+                              <ImagenPlaceholder src={b.foto} variante="avatar" etiqueta={b.user.nombres} className="h-16 w-16 shrink-0" />
+                              <span className="min-w-0">
+                                <span className="block font-semibold text-text">
+                                  {b.user.nombres} {b.user.apellidos}
+                                </span>
+                                <span className="block text-sm text-text-muted">{b.especialidad ?? 'Barbero profesional'}</span>
+                                <span className="mt-1 block">
+                                  <ResumenValoracion promedio={b.promedio_valoracion} total={b.total_valoraciones} />
+                                </span>
+                              </span>
+                            </button>
+                          </li>
+                        )
+                      })}
+                    </ul>
+                  )}
+                </div>
+              )}
+
+              {paso === 2 && (
+                <div>
+                  <h2 id="titulo-paso" className="text-2xl font-semibold text-text">
+                    Elige día y horario
+                  </h2>
+                  <div className="mt-6">
+                    <SelectorDia valor={fecha} onChange={setFecha} />
+                  </div>
+
+                  <div className="mt-6" aria-live="polite">
+                    {cargandoFranjas ? (
+                      <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
+                        {Array.from({ length: 10 }, (_, i) => (
+                          <Skeleton key={i} className="h-11" />
+                        ))}
+                      </div>
+                    ) : gruposFranjas.length === 0 ? (
+                      <p className="rounded-xl bg-bg-subtle p-5 text-text-muted">No hay horarios disponibles ese día. Prueba con otro día de la tira.</p>
+                    ) : (
+                      <div className="space-y-5">
+                        {gruposFranjas.map((g) => (
+                          <div key={g.titulo}>
+                            <h3 className="font-sans text-xs font-semibold uppercase tracking-wider text-text-muted">{g.titulo}</h3>
+                            <div role="radiogroup" aria-label={`Horarios de ${g.titulo.toLowerCase()}`} className="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-5">
+                              {g.horas.map((f) => (
+                                <button
+                                  key={f}
+                                  type="button"
+                                  role="radio"
+                                  aria-checked={hora === f}
+                                  onClick={() => setHora(f)}
+                                  className="min-h-11 rounded-lg border text-sm font-medium transition-colors"
+                                  style={{
+                                    backgroundColor: hora === f ? 'var(--color-brand)' : 'var(--color-surface)',
+                                    color: hora === f ? 'var(--color-text-on-brand)' : 'var(--color-text)',
+                                    borderColor: hora === f ? 'var(--color-brand)' : 'var(--color-border-strong)',
+                                  }}
+                                >
+                                  {f}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {paso === 3 && barberoElegido && hora && (
+                <div>
+                  <h2 id="titulo-paso" className="text-2xl font-semibold text-text">
+                    Confirma tu reserva
+                  </h2>
+                  <p className="mt-1 text-sm text-text-muted">Revisa el resumen y, si quieres, deja una nota para tu barbero.</p>
+                  <label className="mt-6 block">
+                    <span className="mb-1.5 block text-sm font-medium text-text">Notas para el barbero (opcional)</span>
+                    <textarea className="campo" rows={4} maxLength={500} value={notas} onChange={(e) => setNotas(e.target.value)} placeholder="Ej. degradado bajo, alergia a ciertos productos…" />
+                  </label>
+                  <p className="mt-4 text-xs text-text-muted">
+                    Duración estimada: {duracionDe(serviciosSeleccionados)} min de servicio. Podrás reagendar o cancelar desde “Mis citas”, respetando la anticipación mínima.
+                  </p>
+                </div>
+              )}
+            </>
           )}
 
-          <div className="flex items-center justify-between border-t pt-4">
-            <button onClick={() => setPaso(1)} className="btn-secundario">
-              Atrás
-            </button>
-            <button disabled={!hora} onClick={() => setPaso(3)} className="btn-principal">
-              Continuar
-            </button>
-          </div>
-        </div>
-      )}
+          {/* Resumen en móvil (en escritorio va a la derecha). */}
+          {!cargandoCatalogo && paso > 0 && (
+            <details className="tarjeta mt-8 lg:hidden">
+              <summary className="flex cursor-pointer list-none items-center justify-between p-4 text-sm font-semibold text-text">
+                Ver resumen de mi reserva
+                <span className="font-serif text-lg text-accent-hover">Q{totalDe(serviciosSeleccionados).toFixed(2)}</span>
+              </summary>
+              <div className="border-t p-1">
+                <ResumenReserva {...resumen} />
+              </div>
+            </details>
+          )}
 
-      {paso === 3 && barberoElegido && (
-        <div className="mt-6 space-y-4">
-          <h2 className="text-lg font-semibold text-text">Confirma tu reserva</h2>
+          {/* Acciones: fijas abajo en móvil para tener siempre el "Continuar" a mano. */}
+          {!cargandoCatalogo && (
+            <div className="sticky bottom-0 z-10 -mx-4 mt-8 flex items-center justify-between gap-3 border-t bg-bg/95 px-4 py-3 backdrop-blur sm:mx-0 sm:px-0 lg:static lg:border-0 lg:bg-transparent lg:py-0 lg:backdrop-blur-none">
+              {paso > 0 ? (
+                <button type="button" onClick={() => setPaso(paso - 1)} className="btn-secundario">
+                  Atrás
+                </button>
+              ) : (
+                <span className="text-sm text-text-muted">
+                  {servicioIds.length} {servicioIds.length === 1 ? 'servicio' : 'servicios'} · Q{totalDe(serviciosSeleccionados).toFixed(2)}
+                </span>
+              )}
+              {paso < 3 ? (
+                <button type="button" disabled={!puedeAvanzar} onClick={() => setPaso(paso + 1)} className="btn-principal btn-lg">
+                  Continuar
+                </button>
+              ) : (
+                <button type="button" disabled={enviando} onClick={confirmarReserva} className="btn-principal btn-lg">
+                  {enviando ? 'Reservando…' : 'Confirmar cita'}
+                </button>
+              )}
+            </div>
+          )}
+        </section>
 
-          <div className="tarjeta space-y-2 p-5 text-sm">
-            <Fila etiqueta="Servicios" valor={serviciosSeleccionados.map((s) => s.nombre).join(', ')} />
-            <Fila etiqueta="Barbero" valor={`${barberoElegido.user.nombres} ${barberoElegido.user.apellidos}`} />
-            <Fila etiqueta="Fecha" valor={fecha} />
-            <Fila etiqueta="Hora" valor={hora ?? ''} />
-            <Fila etiqueta="Duración estimada" valor={`${totalDuracion} min`} />
-            <Fila etiqueta="Total" valor={`Q${totalPrecio.toFixed(2)}`} destacado />
-          </div>
-
-          <label className="block">
-            <span className="mb-1 block text-sm font-medium text-text">Notas para el barbero (opcional)</span>
-            <textarea
-              className="campo"
-              rows={3}
-              value={notas}
-              onChange={(e) => setNotas(e.target.value)}
-              placeholder="Ej. prefiero degradado bajo, alergia a ciertos productos, etc."
-            />
-          </label>
-
-          <div className="flex items-center justify-between border-t pt-4">
-            <button onClick={() => setPaso(2)} className="btn-secundario">
-              Atrás
-            </button>
-            <button disabled={enviando} onClick={confirmarReserva} className="btn-principal">
-              {enviando ? 'Reservando…' : 'Confirmar cita'}
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
-
-function Pasos({ actual }: { actual: number }) {
-  return (
-    <ol className="flex flex-wrap items-center gap-2 text-sm">
-      {PASOS.map((etiqueta, i) => (
-        <li key={etiqueta} className="flex items-center gap-2">
-          <span
-            className={`grid h-7 w-7 place-items-center rounded-full text-xs font-semibold ${
-              i === actual
-                ? 'bg-accent text-text-on-accent'
-                : i < actual
-                  ? 'bg-accent-soft text-accent-hover'
-                  : 'bg-neutral-soft text-text-faint'
-            }`}
-          >
-            {i + 1}
-          </span>
-          <span className={i === actual ? 'text-text' : 'text-text-faint'}>{etiqueta}</span>
-          {i < PASOS.length - 1 && <span className="mx-1 text-text-faint">—</span>}
-        </li>
-      ))}
-    </ol>
-  )
-}
-
-function Fila({ etiqueta, valor, destacado }: { etiqueta: string; valor: string; destacado?: boolean }) {
-  return (
-    <div className="flex items-center justify-between">
-      <span className="text-text-muted">{etiqueta}</span>
-      <span className={destacado ? 'text-lg font-semibold text-accent-hover' : 'text-text'}>{valor}</span>
-    </div>
+        <aside className="sticky top-24 hidden lg:block" aria-label="Resumen de la reserva">
+          <ResumenReserva {...resumen} />
+        </aside>
+      </div>
+    </Contenedor>
   )
 }

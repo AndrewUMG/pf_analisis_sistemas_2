@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { api, mensajeError } from '../../api/client'
-import { Spinner } from '../../components/Spinner'
+import { Skeleton } from '../../components/Skeleton'
 import { BotonCsv } from '../../components/BotonCsv'
 import type { ReporteHorasPico } from '../../types'
 
@@ -29,7 +29,7 @@ export function HorasPicoVista({ desde, hasta, onError }: { desde: string; hasta
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [desde, hasta])
 
-  if (cargando) return <Spinner etiqueta="Calculando horas pico…" />
+  if (cargando) return <CargandoHoras />
   if (!datos) return null
   if (datos.total_citas === 0) return <p className="text-text-muted">No hay citas en este rango.</p>
 
@@ -100,6 +100,19 @@ export function HorasPicoVista({ desde, hasta, onError }: { desde: string; hasta
           </tbody>
         </table>
       </div>
+    </div>
+  )
+}
+
+function CargandoHoras() {
+  return (
+    <div className="space-y-4" role="status" aria-label="Calculando horas pico">
+      <div className="grid gap-3 sm:grid-cols-3">
+        {[0, 1, 2].map((i) => (
+          <Skeleton key={i} className="h-20" />
+        ))}
+      </div>
+      <Skeleton className="h-64" />
     </div>
   )
 }

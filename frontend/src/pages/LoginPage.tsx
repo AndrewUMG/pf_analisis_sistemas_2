@@ -1,9 +1,10 @@
-import { useState, type FormEvent, type ReactNode } from 'react'
+import { useState, type FormEvent } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { mensajeError } from '../api/client'
 import { Alerta } from '../components/Alerta'
-import { ImagenPlaceholder } from '../components/ImagenPlaceholder'
+import { Campo, InputPassword } from '../components/Campo'
+import { AuthLayout } from '../components/sitio/AuthLayout'
 import { rutaInicioPara } from '../components/RoleRoute'
 
 export function LoginPage() {
@@ -28,68 +29,43 @@ export function LoginPage() {
   }
 
   return (
-    <div className="tarjeta mx-auto grid max-w-4xl grid-cols-1 overflow-hidden md:grid-cols-2">
-      <div className="hidden bg-bg-subtle p-8 md:flex md:flex-col md:justify-between">
-        <ImagenPlaceholder etiqueta="Foto del local" className="aspect-square w-full" />
-        <p className="mt-6 text-sm text-text-muted">
-          "Reservar mi cita nunca fue tan fácil." — así nos describen nuestros clientes.
-        </p>
-      </div>
-
-      <div className="p-8">
-        <h1 className="text-2xl font-semibold text-text">Iniciar sesión</h1>
-        <p className="mt-1 text-sm text-text-muted">Accede para reservar y ver tus citas.</p>
-
-        <form onSubmit={enviar} className="mt-6 space-y-4">
-          {error && <Alerta tipo="error" mensaje={error} />}
-
-          <Campo etiqueta="Correo electrónico">
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="campo"
-              placeholder="tucorreo@ejemplo.com"
-            />
-          </Campo>
-
-          <Campo etiqueta="Contraseña">
-            <input
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="campo"
-              placeholder="••••••••"
-            />
-          </Campo>
-
-          <button type="submit" disabled={cargando} className="btn-principal w-full">
-            {cargando ? 'Ingresando…' : 'Ingresar'}
-          </button>
-        </form>
-
-        <p className="mt-6 text-center text-sm text-text-muted">
+    <AuthLayout
+      titulo="Bienvenido de nuevo"
+      subtitulo="Inicia sesión para reservar y administrar tus citas."
+      pie={
+        <>
           ¿Aún no tienes cuenta?{' '}
-          <Link to="/registro" className="font-medium text-accent-hover hover:underline">
-            Regístrate
+          <Link to="/registro" className="font-semibold text-text underline decoration-accent-strong underline-offset-4">
+            Crea una gratis
           </Link>
-        </p>
+        </>
+      }
+    >
+      <form onSubmit={enviar} className="space-y-5" noValidate={false}>
+        {error && (
+          <div role="alert">
+            <Alerta tipo="error" mensaje={error} />
+          </div>
+        )}
 
-        <div className="mt-4 rounded-lg bg-bg-subtle p-3 text-xs text-text-muted">
-          Demo: <code className="text-text">admin@studiolabarber.local</code> / <code className="text-text">password123</code>
-        </div>
-      </div>
-    </div>
-  )
-}
+        <Campo etiqueta="Correo electrónico">
+          {(p) => <input {...p} type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} className="campo" placeholder="tucorreo@ejemplo.com" />}
+        </Campo>
 
-function Campo({ etiqueta, children }: { etiqueta: string; children: ReactNode }) {
-  return (
-    <label className="block">
-      <span className="mb-1 block text-sm font-medium text-text">{etiqueta}</span>
-      {children}
-    </label>
+        <Campo etiqueta="Contraseña">
+          {(p) => <InputPassword {...p} required autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Tu contraseña" />}
+        </Campo>
+
+        <button type="submit" disabled={cargando} className="btn-principal btn-lg w-full">
+          {cargando ? 'Ingresando…' : 'Iniciar sesión'}
+        </button>
+
+        {import.meta.env.DEV && (
+          <p className="rounded-lg bg-bg-subtle p-3 text-xs text-text-muted">
+            Modo desarrollo · demo: <code className="text-text">admin@studiolabarber.local</code> / <code className="text-text">password123</code>
+          </p>
+        )}
+      </form>
+    </AuthLayout>
   )
 }

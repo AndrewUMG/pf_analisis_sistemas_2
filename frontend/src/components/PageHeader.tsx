@@ -1,11 +1,13 @@
 import type { ReactNode } from 'react'
 
-export function PageHeader({ titulo, descripcion, accion }: { titulo: string; descripcion?: string; accion?: ReactNode }) {
+/** Encabezado de página (público y de paneles): título serif, descripción y acción a la derecha. */
+export function PageHeader({ titulo, descripcion, accion, eyebrow }: { titulo: string; descripcion?: string; accion?: ReactNode; eyebrow?: string }) {
   return (
-    <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
-      <div>
-        <h1 className="text-2xl font-semibold text-text">{titulo}</h1>
-        {descripcion && <p className="mt-1 text-sm text-text-muted">{descripcion}</p>}
+    <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
+      <div className="min-w-0">
+        {eyebrow && <p className="eyebrow mb-1.5">{eyebrow}</p>}
+        <h1 className="text-[clamp(1.6rem,3vw,2.25rem)] font-semibold leading-tight text-text">{titulo}</h1>
+        {descripcion && <p className="mt-1.5 max-w-2xl text-sm text-text-muted sm:text-base">{descripcion}</p>}
       </div>
       {accion}
     </div>

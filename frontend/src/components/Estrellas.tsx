@@ -3,7 +3,7 @@ import { IconEstrella } from './Icons'
 /** Muestra una calificación (0-5, admite decimales) como estrellas; el texto alternativo la dice en palabras. */
 export function Estrellas({ valor, className = 'h-4 w-4' }: { valor: number; className?: string }) {
   return (
-    <span className="inline-flex items-center gap-0.5 text-accent" role="img" aria-label={`${valor.toFixed(1)} de 5 estrellas`}>
+    <span className="inline-flex items-center gap-0.5 text-star" role="img" aria-label={`${valor.toFixed(1)} de 5 estrellas`}>
       {[1, 2, 3, 4, 5].map((n) => (
         <span key={n} className="relative inline-block">
           <IconEstrella llena={false} className={`${className} text-border-strong`} />
@@ -51,7 +51,7 @@ export function SelectorEstrellas({ valor, onChange }: { valor: number; onChange
               if (e.key === 'ArrowRight' || e.key === 'ArrowUp') onChange(Math.min(5, (valor || 0) + 1))
               if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') onChange(Math.max(1, (valor || 2) - 1))
             }}
-            className="rounded p-1 text-accent transition-transform hover:scale-110"
+            className="rounded p-1 text-star transition-transform hover:scale-110"
           >
             <IconEstrella llena={n <= valor} className="h-8 w-8" />
           </button>

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { api, mensajeError } from '../../api/client'
 import { Alerta } from '../../components/Alerta'
-import { Spinner } from '../../components/Spinner'
+import { FilasSkeleton } from '../../components/Skeleton'
 import { PageHeader } from '../../components/PageHeader'
 import type { ParametroSistema } from '../../types'
 
@@ -54,10 +54,10 @@ export function ParametrosPage() {
     }
   }
 
-  if (cargando) return <Spinner etiqueta="Cargando parámetros…" />
+  if (cargando) return <FilasSkeleton cantidad={4} />
 
   return (
-    <div className="mx-auto max-w-2xl">
+    <div className="max-w-3xl">
       <PageHeader titulo="Parámetros del sistema" descripcion="Reglas de negocio configurables sin tocar código." />
 
       {error && (

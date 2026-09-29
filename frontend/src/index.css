@@ -1,76 +1,110 @@
 @import "tailwindcss";
 
 /*
- * Sistema de diseño por tokens semánticos (no por nombre de color).
- * El tema claro es el principal: los valores en @theme son los que se
- * usan por defecto. El bloque [data-theme='dark'] los sobreescribe.
- * Como todo son custom properties reales, cualquier utilidad de Tailwind
- * que las use (bg-bg, text-text, border-border, etc.) cambia sola de
- * tema sin tener que escribir "dark:" en cada elemento.
+ * Sistema de diseño "Clásico premium": marfil cálido, verde bosque de marca y
+ * dorado de acento. Los colores son tokens semánticos (no nombres de color):
+ * el tema claro es el principal y [data-theme='dark'] los sobreescribe, así
+ * cualquier utilidad (bg-surface, text-text-muted…) cambia sola de tema.
+ * Los pares texto/fondo se validan con `node scripts/contraste.mjs` (WCAG AA).
  */
 @theme {
-  --color-bg: #fefdfb;
-  --color-bg-subtle: #f6f2ea;
+  /* Superficies */
+  --color-bg: #fbf8f2;
+  --color-bg-subtle: #f3eee3;
   --color-surface: #ffffff;
   --color-surface-raised: #ffffff;
-  --color-border: #e7e0d3;
-  --color-border-strong: #d6cbb4;
+  --color-border: #e6dfcf;
+  --color-border-strong: #d3c9b0;
+  --color-neutral-soft: #ece6d8;
 
-  --color-text: #241f18;
-  --color-text-muted: #6b6255;
-  --color-text-faint: #a39a8a;
-  --color-text-on-accent: #241f18;
+  /* Texto */
+  --color-text: #1e1a16;
+  --color-text-muted: #5c5347;
+  --color-text-faint: #736a5c;
 
-  --color-accent: #a9762f;
-  --color-accent-hover: #8b5e22;
-  --color-accent-soft: #f4e7d2;
+  /* Marca (verde bosque) — CTA principal, cabeceras, pie */
+  --color-brand: #1f3b32;
+  --color-brand-hover: #2a4d42;
+  --color-text-on-brand: #fbf8f2;
 
+  /* Acento (dorado): relleno, texto sobre relleno, texto de acento y fondo suave */
+  --color-accent: #c9a050;
+  --color-accent-strong: #b8893a;
+  --color-text-on-accent: #1e1a16;
+  --color-accent-hover: #7a5716;
+  --color-accent-soft: #f3e6cb;
+  --color-star: #b8862b;
+
+  /* Estados */
   --color-danger: #a3352c;
   --color-danger-soft: #fbeae8;
-  --color-success: #276b47;
-  --color-success-soft: #e6f4ec;
+  --color-success: #22633f;
+  --color-success-soft: #e4f3ea;
   --color-info: #2b5e94;
-  --color-info-soft: #e8f1fa;
-  --color-neutral-soft: #efeae0;
+  --color-info-soft: #e6f0fa;
 
-  --shadow-card: 0 1px 2px rgba(36, 31, 24, 0.04), 0 1px 12px rgba(36, 31, 24, 0.05);
-  --shadow-raised: 0 4px 16px rgba(36, 31, 24, 0.08), 0 1px 4px rgba(36, 31, 24, 0.06);
+  /* Forma y profundidad */
+  --radius-lg: 0.625rem;
+  --radius-xl: 0.875rem;
+  --radius-2xl: 1.25rem;
+  --shadow-card: 0 1px 2px rgba(30, 26, 22, 0.05), 0 2px 14px rgba(30, 26, 22, 0.05);
+  --shadow-raised: 0 6px 20px rgba(30, 26, 22, 0.1), 0 1px 4px rgba(30, 26, 22, 0.06);
+  --shadow-float: 0 24px 60px -12px rgba(31, 59, 50, 0.28);
 
-  --font-display: 'Poppins', 'Segoe UI', system-ui, sans-serif;
+  /* Tipografía: serif de carácter para titulares, sans neutra para la interfaz */
+  --font-sans: 'Inter Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-serif: 'Fraunces Variable', Georgia, 'Times New Roman', serif;
+
+  --ease-salida: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* Barra lateral de los paneles */
+  --color-sidebar: #1f3b32;
+  --color-sidebar-texto: #e9e4d6;
 }
 
 :root[data-theme='dark'] {
-  --color-bg: #131211;
-  --color-bg-subtle: #1a1917;
-  --color-surface: #1e1c19;
-  --color-surface-raised: #24211d;
-  --color-border: #34302a;
-  --color-border-strong: #443e34;
+  --color-bg: #0f1512;
+  --color-bg-subtle: #151c18;
+  --color-surface: #18211c;
+  --color-surface-raised: #1e2924;
+  --color-border: #2a3730;
+  --color-border-strong: #3a4a41;
+  --color-neutral-soft: #222d27;
 
-  --color-text: #f3efe6;
-  --color-text-muted: #b0a89a;
-  --color-text-faint: #756c5d;
-  --color-text-on-accent: #1a1611;
+  --color-text: #f4efe4;
+  --color-text-muted: #b7b4a6;
+  --color-text-faint: #8f9084;
 
-  --color-accent: #dcae64;
-  --color-accent-hover: #e9c58a;
-  --color-accent-soft: rgba(220, 174, 100, 0.16);
+  --color-brand: #2f6b55;
+  --color-brand-hover: #3a8067;
+  --color-text-on-brand: #f4efe4;
 
-  --color-danger: #e5847a;
-  --color-danger-soft: rgba(229, 132, 122, 0.14);
-  --color-success: #7bd0a3;
-  --color-success-soft: rgba(123, 208, 163, 0.14);
-  --color-info: #8bb8ea;
-  --color-info-soft: rgba(139, 184, 234, 0.14);
-  --color-neutral-soft: #2a2723;
+  --color-accent: #d9b26a;
+  --color-accent-strong: #e0be80;
+  --color-text-on-accent: #1a1408;
+  --color-accent-hover: #e8c98b;
+  --color-accent-soft: #2b2a1c;
+  --color-star: #e0b458;
 
-  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.24), 0 1px 12px rgba(0, 0, 0, 0.2);
-  --shadow-raised: 0 8px 24px rgba(0, 0, 0, 0.36), 0 1px 4px rgba(0, 0, 0, 0.3);
+  --color-danger: #f09a90;
+  --color-danger-soft: #33201e;
+  --color-success: #7fd3a5;
+  --color-success-soft: #1b2f25;
+  --color-info: #8fbaea;
+  --color-info-soft: #1b2a3a;
+
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.3), 0 2px 14px rgba(0, 0, 0, 0.24);
+  --shadow-raised: 0 8px 26px rgba(0, 0, 0, 0.42), 0 1px 4px rgba(0, 0, 0, 0.3);
+  --shadow-float: 0 24px 60px -12px rgba(0, 0, 0, 0.6);
+
+  --color-sidebar: #111a16;
+  --color-sidebar-texto: #d8d4c6;
 }
 
-/* Evita el "flash" de tema incorrecto: el atributo se fija antes del primer paint (ver main.tsx). */
 html {
   color-scheme: light;
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
 }
 html[data-theme='dark'] {
   color-scheme: dark;
@@ -79,7 +113,10 @@ html[data-theme='dark'] {
 body {
   background-color: var(--color-bg);
   color: var(--color-text);
-  font-family: var(--font-display);
+  font-family: var(--font-sans);
+  font-feature-settings: 'cv11', 'ss01';
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 * {
@@ -91,82 +128,260 @@ body {
   color: var(--color-text);
 }
 
+@layer base {
+  /* Titulares con serif; el cuerpo y la interfaz se quedan en sans. */
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-serif);
+    font-variation-settings: 'SOFT' 50, 'WONK' 0;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+  }
+  p {
+    text-wrap: pretty;
+  }
+  /* Foco visible y consistente para teclado (WCAG 2.4.7 / 2.4.11). */
+  :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+    outline: 2px solid var(--color-accent-strong);
+    outline-offset: 2px;
+  }
+  :where(.campo):focus-visible {
+    outline: none;
+  }
+}
+
 @layer components {
+  /* ---------- Formularios ---------- */
   .campo {
-    @apply w-full rounded-lg border bg-surface px-3 py-2.5 text-sm text-text transition-colors;
-    border-color: var(--color-border);
+    @apply w-full rounded-lg border bg-surface px-3.5 py-2.5 text-base text-text transition-[border-color,box-shadow] sm:text-sm;
+    border-color: var(--color-border-strong);
   }
   .campo::placeholder {
     color: var(--color-text-faint);
   }
+  .campo:hover:not(:focus) {
+    border-color: var(--color-text-faint);
+  }
   .campo:focus {
     outline: none;
-    border-color: var(--color-accent);
-    box-shadow: 0 0 0 3px var(--color-accent-soft);
+    border-color: var(--color-brand);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 35%, transparent);
   }
 
+  /* ---------- Botones ---------- */
+  .btn-principal,
+  .btn-secundario,
+  .btn-dorado,
+  .btn-peligro {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50;
+  }
   .btn-principal {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50;
+    background-color: var(--color-brand);
+    color: var(--color-text-on-brand);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.08) inset, 0 1px 2px rgba(0, 0, 0, 0.15);
+  }
+  .btn-principal:hover:not(:disabled) {
+    background-color: var(--color-brand-hover);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-raised);
+  }
+  .btn-dorado {
     background-color: var(--color-accent);
     color: var(--color-text-on-accent);
   }
-  .btn-principal:hover:not(:disabled) {
-    background-color: var(--color-accent-hover);
+  .btn-dorado:hover:not(:disabled) {
+    background-color: var(--color-accent-strong);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-raised);
   }
-  .btn-principal:focus-visible {
-    outline: 2px solid var(--color-accent);
-    outline-offset: 2px;
-  }
-
   .btn-secundario {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50;
+    @apply border;
     border-color: var(--color-border-strong);
     color: var(--color-text);
     background-color: transparent;
   }
   .btn-secundario:hover:not(:disabled) {
-    border-color: var(--color-accent);
-    color: var(--color-accent-hover);
+    border-color: var(--color-brand);
+    background-color: var(--color-bg-subtle);
   }
-  .btn-secundario:focus-visible {
-    outline: 2px solid var(--color-accent);
-    outline-offset: 2px;
-  }
-
-  /* Acción destructiva confirmada (p. ej. cancelar una cita); el texto usa el color de fondo para contrastar en ambos temas. */
+  /* Acción destructiva confirmada; el texto usa el fondo para contrastar en ambos temas. */
   .btn-peligro {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition-opacity disabled:cursor-not-allowed disabled:opacity-50;
     background-color: var(--color-danger);
     color: var(--color-bg);
   }
   .btn-peligro:hover:not(:disabled) {
     opacity: 0.9;
   }
-  .btn-peligro:focus-visible {
-    outline: 2px solid var(--color-danger);
-    outline-offset: 2px;
-  }
-
   .btn-texto {
-    @apply text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50;
+    @apply text-sm font-medium transition-opacity disabled:cursor-not-allowed disabled:opacity-50;
     color: var(--color-danger);
   }
   .btn-texto:hover:not(:disabled) {
-    opacity: 0.8;
+    opacity: 0.75;
+  }
+  .btn-lg {
+    @apply px-6 py-3.5 text-base;
+  }
+  /* Objetivos táctiles de al menos 44 px en pantallas táctiles (WCAG 2.5.8). */
+  @media (pointer: coarse) {
+    .btn-principal,
+    .btn-secundario,
+    .btn-dorado,
+    .btn-peligro,
+    .btn-texto {
+      min-height: 2.75rem;
+    }
   }
 
+  /* ---------- Superficies ---------- */
   .tarjeta {
     @apply rounded-xl border;
     background-color: var(--color-surface);
     border-color: var(--color-border);
     box-shadow: var(--shadow-card);
   }
-
-  /* Rectángulo reservado para una imagen que se agregará más adelante. */
-  .placeholder-imagen {
-    @apply flex flex-col items-center justify-center gap-1.5 rounded-lg border border-dashed text-center;
-    background-color: var(--color-bg-subtle);
+  .tarjeta-interactiva {
+    @apply rounded-xl border transition-all duration-300;
+    background-color: var(--color-surface);
+    border-color: var(--color-border);
+    box-shadow: var(--shadow-card);
+  }
+  .tarjeta-interactiva:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-raised);
     border-color: var(--color-border-strong);
-    color: var(--color-text-faint);
+  }
+
+  /* ---------- Etiquetas ---------- */
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors;
+    border-color: var(--color-border-strong);
+    color: var(--color-text-muted);
+    background-color: var(--color-surface);
+  }
+  .chip:hover {
+    border-color: var(--color-brand);
+    color: var(--color-text);
+  }
+  .chip[aria-pressed='true'] {
+    background-color: var(--color-brand);
+    border-color: var(--color-brand);
+    color: var(--color-text-on-brand);
+  }
+  .badge {
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
+  }
+  .eyebrow {
+    @apply text-xs font-semibold uppercase tracking-[0.18em];
+    color: var(--color-accent-hover);
+  }
+
+  /* ---------- Ornamento: línea – rombo – línea ---------- */
+  .divisor-ornamental {
+    @apply flex items-center gap-3;
+    color: var(--color-accent-strong);
+  }
+  .divisor-ornamental::before,
+  .divisor-ornamental::after {
+    content: '';
+    height: 1px;
+    flex: 1;
+    background: linear-gradient(90deg, transparent, currentColor);
+    opacity: 0.55;
+  }
+  .divisor-ornamental::after {
+    background: linear-gradient(270deg, transparent, currentColor);
+  }
+  .divisor-ornamental > span {
+    width: 7px;
+    height: 7px;
+    transform: rotate(45deg);
+    background: currentColor;
+  }
+
+  /* Rayas diagonales sutiles, guiño al poste de barbería, para fondos de bloque. */
+  .textura-rayas {
+    background-image: repeating-linear-gradient(
+      -45deg,
+      transparent 0 14px,
+      color-mix(in srgb, var(--color-brand) 5%, transparent) 14px 16px
+    );
+  }
+
+  /* ---------- Imágenes: placeholder de marca (se sustituye por la foto real) ---------- */
+  .placeholder-imagen {
+    @apply relative flex flex-col items-center justify-center gap-1.5 overflow-hidden text-center;
+    color: color-mix(in srgb, var(--color-brand) 70%, var(--color-text));
+    background:
+      repeating-linear-gradient(-45deg, transparent 0 10px, color-mix(in srgb, var(--color-brand) 6%, transparent) 10px 11px),
+      linear-gradient(135deg, color-mix(in srgb, var(--color-brand) 30%, var(--color-bg-subtle)), color-mix(in srgb, var(--color-accent) 40%, var(--color-bg-subtle)));
+  }
+
+  /* ---------- Carga: esqueleto con brillo ---------- */
+  .skeleton {
+    @apply rounded-lg;
+    background: linear-gradient(90deg, var(--color-neutral-soft) 25%, var(--color-bg-subtle) 50%, var(--color-neutral-soft) 75%);
+    background-size: 200% 100%;
+    animation: brillo 1.4s linear infinite;
+  }
+}
+
+/* ---------- Animaciones (todas desactivadas con prefers-reduced-motion) ---------- */
+@keyframes brillo {
+  to {
+    background-position: -200% 0;
+  }
+}
+@keyframes aparecer {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+.aparecer {
+  animation: aparecer 0.6s var(--ease-salida) both;
+  animation-delay: calc(var(--i, 0) * 70ms);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .skeleton {
+    animation: none;
+  }
+}
+
+/* Enlace "saltar al contenido": visible solo al recibir foco con el teclado. */
+.saltar {
+  position: absolute;
+  left: 0.75rem;
+  top: -4rem;
+  z-index: 100;
+  padding: 0.6rem 1rem;
+  border-radius: 0.5rem;
+  background: var(--color-brand);
+  color: var(--color-text-on-brand);
+  font-weight: 600;
+  transition: top 0.15s;
+}
+.saltar:focus {
+  top: 0.75rem;
+}
+
+@keyframes entraDerecha {
+  from {
+    transform: translateX(100%);
+  }
+}
+@keyframes entraIzquierda {
+  from {
+    transform: translateX(-100%);
   }
 }

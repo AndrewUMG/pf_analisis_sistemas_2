@@ -2,7 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { api, mensajeError } from '../../api/client'
 import { useAuth } from '../../context/AuthContext'
 import { Alerta } from '../../components/Alerta'
-import { Spinner } from '../../components/Spinner'
+import { FilasSkeleton } from '../../components/Skeleton'
 import { PageHeader } from '../../components/PageHeader'
 import type { Barbero, ExcepcionHorario } from '../../types'
 
@@ -112,20 +112,20 @@ export function HorarioPage() {
     return <Alerta tipo="error" mensaje="Tu cuenta no tiene un perfil de barbero asociado." />
   }
 
-  if (cargando) return <Spinner etiqueta="Cargando tu horario…" />
+  if (cargando) return <FilasSkeleton cantidad={4} />
 
   return (
-    <div className="mx-auto max-w-2xl space-y-10">
+    <div className="grid items-start gap-10 xl:grid-cols-2">
       <div>
-        <PageHeader titulo="Mi horario" descripcion="Define tu jornada laboral semanal recurrente." />
+        <PageHeader eyebrow="Mi jornada" titulo="Mi horario" descripcion="Define tu jornada laboral semanal recurrente." />
 
         {error && (
-          <div className="mb-4">
+          <div className="mb-4" role="alert">
             <Alerta tipo="error" mensaje={error} />
           </div>
         )}
         {exito && (
-          <div className="mb-4">
+          <div className="mb-4" role="status">
             <Alerta tipo="exito" mensaje={exito} />
           </div>
         )}
@@ -141,7 +141,7 @@ export function HorarioPage() {
                     type="checkbox"
                     checked={fila.activo}
                     onChange={(e) => actualizarDia(dia.valor, { activo: e.target.checked })}
-                    className="h-4 w-4 accent-[var(--color-accent)]"
+                    className="h-5 w-5 accent-[var(--color-brand)]"
                   />
                   {dia.etiqueta}
                 </label>
@@ -149,6 +149,7 @@ export function HorarioPage() {
                   <div className="flex items-center gap-2 text-sm">
                     <input
                       type="time"
+                      aria-label={`${dia.etiqueta}: hora de inicio`}
                       value={fila.hora_inicio}
                       onChange={(e) => actualizarDia(dia.valor, { hora_inicio: e.target.value })}
                       className="campo w-auto"
@@ -156,6 +157,7 @@ export function HorarioPage() {
                     <span className="text-text-muted">a</span>
                     <input
                       type="time"
+                      aria-label={`${dia.etiqueta}: hora de fin`}
                       value={fila.hora_fin}
                       onChange={(e) => actualizarDia(dia.valor, { hora_fin: e.target.value })}
                       className="campo w-auto"
@@ -176,7 +178,7 @@ export function HorarioPage() {
       </div>
 
       <div>
-        <PageHeader titulo="Días libres y permisos" descripcion="Bloquea fechas puntuales fuera de tu jornada recurrente." />
+        <PageHeader eyebrow="Ausencias" titulo="Días libres y permisos" descripcion="Bloquea fechas puntuales fuera de tu jornada recurrente." />
 
         <form onSubmit={agregarExcepcion} className="tarjeta mb-4 space-y-3 p-5">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">

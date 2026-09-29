@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { api, mensajeError } from '../../api/client'
 import { Alerta } from '../../components/Alerta'
-import { Spinner } from '../../components/Spinner'
+import { FilasSkeleton } from '../../components/Skeleton'
 import { PageHeader } from '../../components/PageHeader'
 import { ImagenPlaceholder } from '../../components/ImagenPlaceholder'
 import type { Barbero, Cita, Servicio } from '../../types'
@@ -71,10 +71,10 @@ export function WalkinPage() {
     }
   }
 
-  if (cargando) return <Spinner etiqueta="Cargando catálogo…" />
+  if (cargando) return <FilasSkeleton cantidad={4} />
 
   return (
-    <div className="mx-auto max-w-2xl">
+    <div className="max-w-2xl">
       <PageHeader titulo="Registro presencial" descripcion="Atiende a un cliente que llegó sin cita, con el primer horario libre de hoy." />
 
       {error && (
