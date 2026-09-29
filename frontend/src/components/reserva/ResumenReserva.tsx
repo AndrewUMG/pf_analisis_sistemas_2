@@ -1,5 +1,5 @@
 import { ImagenPlaceholder } from '../ImagenPlaceholder'
-import { formatoFechaLarga } from '../../utils/fechas'
+import { capitalizar, formatoFechaLarga } from '../../utils/fechas'
 import type { Barbero, Servicio } from '../../types'
 
 export interface DatosResumen {
@@ -58,7 +58,7 @@ export function ResumenReserva({ servicios, barbero, fecha, hora }: DatosResumen
           <dd className="mt-1.5 text-text">
             {fecha && hora ? (
               <>
-                <span className="capitalize">{formatoFechaLarga(fecha)}</span> · {hora}
+                <span>{capitalizar(formatoFechaLarga(fecha))}</span> · {hora}
               </>
             ) : (
               <span className="text-text-faint">Por elegir</span>

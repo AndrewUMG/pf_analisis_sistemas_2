@@ -58,7 +58,7 @@ export function ParametrosPage() {
 
   return (
     <div className="max-w-3xl">
-      <PageHeader titulo="Parámetros del sistema" descripcion="Reglas de negocio configurables sin tocar código." />
+      <PageHeader eyebrow="Sistema" titulo="Parámetros del sistema" descripcion="Reglas de negocio configurables sin tocar código." />
 
       {error && (
         <div className="mb-4">

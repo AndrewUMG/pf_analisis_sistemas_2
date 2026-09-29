@@ -2,7 +2,7 @@ import type { CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
 import { NEGOCIO } from '../../config/negocio'
 import { descargarIcs } from '../../utils/ics'
-import { formatoFechaLarga, formatoHora, soloFecha } from '../../utils/fechas'
+import { capitalizar, formatoFechaLarga, formatoHora, soloFecha } from '../../utils/fechas'
 import { IconCalendario, IconCheck } from '../Icons'
 import type { Cita } from '../../types'
 
@@ -21,7 +21,7 @@ export function ReservaExito({ cita, servicios, barbero, onOtra }: { cita: Cita;
 
       <div className="tarjeta mt-8 p-6 text-left">
         <p className="eyebrow">Detalle de tu cita</p>
-        <p className="mt-2 font-serif text-2xl font-semibold capitalize text-text">{formatoFechaLarga(fecha)}</p>
+        <p className="mt-2 font-serif text-2xl font-semibold text-text">{capitalizar(formatoFechaLarga(fecha))}</p>
         <p className="text-lg text-text">
           {formatoHora(cita.hora_inicio)} – {formatoHora(cita.hora_fin)}
         </p>

@@ -178,7 +178,7 @@ export function HorarioPage() {
       </div>
 
       <div>
-        <PageHeader eyebrow="Ausencias" titulo="Días libres y permisos" descripcion="Bloquea fechas puntuales fuera de tu jornada recurrente." />
+        <PageHeader nivel={2} eyebrow="Ausencias" titulo="Días libres y permisos" descripcion="Bloquea fechas puntuales fuera de tu jornada recurrente." />
 
         <form onSubmit={agregarExcepcion} className="tarjeta mb-4 space-y-3 p-5">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">

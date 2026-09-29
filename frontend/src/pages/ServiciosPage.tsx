@@ -35,7 +35,7 @@ export function ServiciosPage() {
     <>
       <section className="border-b bg-bg-subtle textura-rayas">
         <Contenedor className="py-14 sm:py-20">
-          <SeccionTitulo eyebrow="Catálogo" titulo="Nuestros servicios" descripcion="Encuentra el servicio ideal y reserva con el barbero que prefieras." />
+          <SeccionTitulo nivel={1} eyebrow="Catálogo" titulo="Nuestros servicios" descripcion="Encuentra el servicio ideal y reserva con el barbero que prefieras." />
         </Contenedor>
       </section>
 

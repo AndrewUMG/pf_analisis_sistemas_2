@@ -85,7 +85,7 @@ export function NotificacionesPage() {
 
   return (
     <div>
-      <PageHeader
+      <PageHeader eyebrow="Sistema"
         titulo="Notificaciones"
         descripcion="Confirmaciones y recordatorios automáticos enviados a los clientes."
         accion={

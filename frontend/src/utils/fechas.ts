@@ -34,3 +34,5 @@ export function partesFecha(iso: string): { dia: string; mes: string } {
     mes: d.toLocaleDateString('es-GT', { month: 'short' }).replace('.', ''),
   }
 }
+
+export const capitalizar = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
