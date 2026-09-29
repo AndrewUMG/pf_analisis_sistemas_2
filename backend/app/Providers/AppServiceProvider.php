@@ -2,7 +2,7 @@
 
 namespace App\Providers;
 
-use App\Services\Mensajeria\LogProveedorMensajeria;
+use App\Services\Mensajeria\MensajeriaPorCanal;
 use App\Services\Mensajeria\ProveedorMensajeria;
 use Illuminate\Support\ServiceProvider;
 
@@ -15,7 +15,7 @@ class AppServiceProvider extends ServiceProvider
     {
         // Punto único de sustitución del proveedor de mensajería real
         // (WhatsApp/correo) cuando el negocio contrate esas APIs (RF-04).
-        $this->app->bind(ProveedorMensajeria::class, LogProveedorMensajeria::class);
+        $this->app->bind(ProveedorMensajeria::class, MensajeriaPorCanal::class);
     }
 
     /**

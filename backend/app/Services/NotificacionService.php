@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Exceptions\NegocioException;
 use App\Models\Cita;
 use App\Models\Notificacion;
 use App\Services\Mensajeria\ProveedorMensajeria;
@@ -18,17 +19,40 @@ class NotificacionService
 
     public function __construct(private readonly ProveedorMensajeria $proveedor) {}
 
-    /** Encola la confirmación y los dos recordatorios de una cita recién creada. */
+    /**
+     * Encola la confirmación y los dos recordatorios de una cita recién creada,
+     * por cada canal que el cliente realmente tiene (RF-04: WhatsApp y correo).
+     */
     public function programarParaCita(Cita $cita): void
     {
-        foreach (['confirmacion', 'recordatorio_24h', 'recordatorio_2h'] as $tipo) {
-            Notificacion::create([
-                'cita_id' => $cita->id,
-                'tipo' => $tipo,
-                'canal' => 'whatsapp',
-                'estado' => 'pendiente',
-            ]);
+        foreach ($this->canalesDisponibles($cita) as $canal) {
+            foreach (['confirmacion', 'recordatorio_24h', 'recordatorio_2h'] as $tipo) {
+                Notificacion::create([
+                    'cita_id' => $cita->id,
+                    'tipo' => $tipo,
+                    'canal' => $canal,
+                    'estado' => 'pendiente',
+                ]);
+            }
         }
+    }
+
+    /** @return array<int, string> */
+    private function canalesDisponibles(Cita $cita): array
+    {
+        $cliente = $cita->cliente;
+        $canales = [];
+
+        // Los clientes presenciales (walk-in) se crean con un correo interno
+        // inventado: no tiene sentido enviarles mensajes ahí.
+        if ($cliente?->email && ! str_ends_with($cliente->email, '@studiolabarber.local')) {
+            $canales[] = 'correo';
+        }
+        if ($cliente?->telefono) {
+            $canales[] = 'whatsapp';
+        }
+
+        return $canales;
     }
 
     /** Descarta las notificaciones que ya no aplican (cita cancelada o reagendada). */
@@ -84,37 +108,56 @@ class NotificacionService
         return now()->greaterThanOrEqualTo($inicioCita->copy()->subHours($horasAntes));
     }
 
+    /**
+     * Reintento manual de una notificación fallida (lo dispara el administrador).
+     * La deja pendiente con los intentos en cero y la envía de inmediato.
+     */
+    public function reintentar(Notificacion $notificacion): Notificacion
+    {
+        if ($notificacion->estado !== 'fallida') {
+            throw new NegocioException('Solo se pueden reintentar las notificaciones fallidas.');
+        }
+
+        $notificacion->update(['estado' => 'pendiente', 'intentos' => 0, 'ultimo_error' => null]);
+        $this->enviar($notificacion->load('cita.cliente', 'cita.barbero.user'));
+
+        return $notificacion->fresh(['cita.cliente', 'cita.barbero.user']);
+    }
+
     private function enviar(Notificacion $notificacion): bool
     {
         $cita = $notificacion->cita;
         $destino = $notificacion->canal === 'whatsapp' ? $cita->cliente->telefono : $cita->cliente->email;
 
         if (empty($destino)) {
-            return $this->marcarFallida($notificacion);
+            return $this->marcarFallida($notificacion, 'El cliente no tiene un dato de contacto para este canal.');
         }
 
         $mensaje = $this->construirMensaje($notificacion, $cita);
-        $enviado = $this->proveedor->enviar($notificacion->canal, $destino, $mensaje);
+        // Se guarda lo que se intentó enviar, para poder auditarlo después.
+        $notificacion->update(['destino' => $destino, 'mensaje' => $mensaje]);
 
-        if ($enviado) {
+        if ($this->proveedor->enviar($notificacion->canal, $destino, $mensaje)) {
             $notificacion->update([
                 'estado' => 'enviada',
                 'intentos' => $notificacion->intentos + 1,
                 'enviado_at' => now(),
+                'ultimo_error' => null,
             ]);
 
             return true;
         }
 
-        return $this->marcarFallida($notificacion);
+        return $this->marcarFallida($notificacion, 'El proveedor no pudo entregar el mensaje.');
     }
 
-    private function marcarFallida(Notificacion $notificacion): bool
+    private function marcarFallida(Notificacion $notificacion, string $motivo): bool
     {
         $intentos = $notificacion->intentos + 1;
         $notificacion->update([
             'intentos' => $intentos,
             'estado' => $intentos >= self::MAX_INTENTOS ? 'fallida' : 'pendiente',
+            'ultimo_error' => $motivo,
         ]);
 
         return false;

@@ -27,6 +27,8 @@ const ENLACES_POR_ROL: Record<string, { to: string; etiqueta: string }[]> = {
     { to: '/admin/usuarios', etiqueta: 'Usuarios' },
     { to: '/recepcion/inventario', etiqueta: 'Inventario' },
     { to: '/admin/reportes', etiqueta: 'Reportes' },
+    { to: '/admin/valoraciones', etiqueta: 'Valoraciones' },
+    { to: '/admin/notificaciones', etiqueta: 'Notificaciones' },
     { to: '/admin/parametros', etiqueta: 'Parámetros' },
   ],
 }

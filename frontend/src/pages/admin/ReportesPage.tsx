@@ -4,6 +4,8 @@ import { Alerta } from '../../components/Alerta'
 import { Spinner } from '../../components/Spinner'
 import { PageHeader } from '../../components/PageHeader'
 import { Tabs } from '../../components/Tabs'
+import { BotonCsv } from '../../components/BotonCsv'
+import { HorasPicoVista } from './HorasPicoVista'
 import type {
   PaginaVentas,
   ReporteCancelaciones,
@@ -13,7 +15,7 @@ import type {
   Venta,
 } from '../../types'
 
-type Pestana = 'ingresos' | 'servicios' | 'comisiones' | 'cancelaciones' | 'ventas'
+type Pestana = 'ingresos' | 'servicios' | 'comisiones' | 'cancelaciones' | 'horas' | 'ventas'
 
 function hace30Dias(): string {
   const fecha = new Date()
@@ -50,6 +52,7 @@ export function ReportesPage() {
           { valor: 'servicios', etiqueta: 'Servicios' },
           { valor: 'comisiones', etiqueta: 'Comisiones' },
           { valor: 'cancelaciones', etiqueta: 'Cancelaciones' },
+          { valor: 'horas', etiqueta: 'Horas pico' },
           { valor: 'ventas', etiqueta: 'Ventas' },
         ]}
         activa={pestana}
@@ -66,6 +69,7 @@ export function ReportesPage() {
       {pestana === 'servicios' && <ReporteServiciosVista desde={desde} hasta={hasta} onError={setError} />}
       {pestana === 'comisiones' && <ReporteComisionesVista desde={desde} hasta={hasta} onError={setError} />}
       {pestana === 'cancelaciones' && <ReporteCancelacionesVista desde={desde} hasta={hasta} onError={setError} />}
+      {pestana === 'horas' && <HorasPicoVista desde={desde} hasta={hasta} onError={setError} />}
       {pestana === 'ventas' && <VentasVista onError={setError} />}
     </div>
   )
@@ -96,9 +100,12 @@ function ReporteIngresosVista({ desde, hasta, onError }: { desde: string; hasta:
 
   return (
     <div className="space-y-4">
-      <div className="tarjeta p-5">
+      <div className="tarjeta flex items-start justify-between gap-3 p-5">
+        <div>
         <p className="text-sm text-text-muted">Total del período</p>
         <p className="text-3xl font-semibold text-accent-hover">Q{Number(datos.total_periodo).toFixed(2)}</p>
+        </div>
+        <BotonCsv nombre={`ingresos_${desde}_${hasta}.csv`} deshabilitado={datos.por_dia.length === 0} filas={[["Fecha", "Total (Q)"], ...datos.por_dia.map((d) => [d.fecha, Number(d.total).toFixed(2)])]} />
       </div>
       {datos.por_dia.length === 0 ? (
         <p className="text-text-muted">No hay ventas registradas en este rango.</p>
@@ -146,6 +153,8 @@ function ReporteServiciosVista({ desde, hasta, onError }: { desde: string; hasta
   const maximo = Math.max(1, ...datos.servicios.map((s) => s.veces_solicitado))
 
   return (
+    <div className="space-y-3">
+    <div className="flex justify-end"><BotonCsv nombre={`servicios_${desde}_${hasta}.csv`} filas={[["Servicio", "Veces solicitado"], ...datos.servicios.map((s) => [s.nombre, s.veces_solicitado])]} /></div>
     <ul className="space-y-1.5">
       {datos.servicios.map((s) => (
         <li key={s.nombre} className="flex items-center gap-3 text-sm">
@@ -157,6 +166,7 @@ function ReporteServiciosVista({ desde, hasta, onError }: { desde: string; hasta
         </li>
       ))}
     </ul>
+    </div>
   )
 }
 
@@ -182,6 +192,8 @@ function ReporteComisionesVista({ desde, hasta, onError }: { desde: string; hast
   if (!datos || datos.comisiones.length === 0) return <p className="text-text-muted">No hay comisiones en este rango.</p>
 
   return (
+    <div className="space-y-3">
+    <div className="flex justify-end"><BotonCsv nombre={`comisiones_${desde}_${hasta}.csv`} filas={[["Barbero", "Servicios cobrados", "Comisión (Q)"], ...datos.comisiones.map((c) => [c.barbero, c.servicios_cobrados, Number(c.comision_total).toFixed(2)])]} /></div>
     <ul className="space-y-2">
       {datos.comisiones.map((c) => (
         <li key={c.barbero_id} className="tarjeta flex items-center justify-between p-4 text-sm">
@@ -193,6 +205,7 @@ function ReporteComisionesVista({ desde, hasta, onError }: { desde: string; hast
         </li>
       ))}
     </ul>
+    </div>
   )
 }
 

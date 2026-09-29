@@ -9,6 +9,7 @@ import { Tabs } from '../components/Tabs'
 import { CitaCard } from '../components/citas/CitaCard'
 import { CancelarDialog } from '../components/citas/CancelarDialog'
 import { ReagendarDialog } from '../components/citas/ReagendarDialog'
+import { ValorarDialog } from '../components/citas/ValorarDialog'
 import { soloFecha } from '../utils/fechas'
 import type { Cita, PaginaCitas } from '../types'
 
@@ -26,6 +27,7 @@ export function MisCitasPage() {
   const [pestana, setPestana] = useState<Pestana>('proximas')
   const [aReagendar, setAReagendar] = useState<Cita | null>(null)
   const [aCancelar, setACancelar] = useState<Cita | null>(null)
+  const [aValorar, setAValorar] = useState<Cita | null>(null)
 
   async function cargar() {
     setError('')
@@ -56,6 +58,7 @@ export function MisCitasPage() {
   function alTerminarAccion(mensaje: string) {
     setAReagendar(null)
     setACancelar(null)
+    setAValorar(null)
     setAviso(mensaje)
     cargar()
   }
@@ -115,13 +118,14 @@ export function MisCitasPage() {
       ) : (
         <ul className="space-y-3">
           {visibles.map((cita) => (
-            <CitaCard key={cita.id} cita={cita} onReagendar={setAReagendar} onCancelar={setACancelar} />
+            <CitaCard key={cita.id} cita={cita} onReagendar={setAReagendar} onCancelar={setACancelar} onValorar={setAValorar} />
           ))}
         </ul>
       )}
 
       {aReagendar && <ReagendarDialog cita={aReagendar} onClose={() => setAReagendar(null)} onDone={alTerminarAccion} />}
       {aCancelar && <CancelarDialog cita={aCancelar} onClose={() => setACancelar(null)} onDone={alTerminarAccion} />}
+      {aValorar && <ValorarDialog cita={aValorar} onClose={() => setAValorar(null)} onDone={alTerminarAccion} />}
     </div>
   )
 }

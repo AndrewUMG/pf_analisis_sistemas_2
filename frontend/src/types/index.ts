@@ -51,6 +51,8 @@ export interface Barbero {
   user_id: number
   especialidad: string | null
   foto: string | null
+  promedio_valoracion?: number | string | null
+  total_valoraciones?: number
   comision_porcentaje: string
   user: Usuario
   servicios: Servicio[]
@@ -84,6 +86,7 @@ export interface Cita {
   canal_origen: 'en_linea' | 'presencial'
   notas: string | null
   motivo_cambio?: string | null
+  valoracion?: { id: number; calificacion: number; comentario: string | null } | null
   monto_estimado: string | null
   /** Calculado por el backend: confirmada y con la anticipación mínima vigente (RF-06). */
   puede_modificar?: boolean
@@ -210,4 +213,53 @@ export interface ErrorApi {
   message?: string
   errors?: Record<string, string[]>
   errores?: Record<string, string[]>
+}
+
+export interface Valoracion {
+  id: number
+  cita_id: number
+  cliente_id: number
+  barbero_id: number
+  calificacion: number
+  comentario: string | null
+  visible: boolean
+  created_at: string
+  cliente?: Pick<Usuario, 'id' | 'nombres' | 'apellidos'>
+  barbero?: { id: number; user: Pick<Usuario, 'id' | 'nombres' | 'apellidos'> }
+  cita?: { id: number; fecha: string; hora_inicio: string }
+}
+
+export interface RespuestaValoraciones {
+  valoraciones: { data: Valoracion[]; current_page: number; last_page: number; total: number }
+  resumen: { total: number; promedio: number | null; por_estrella: Record<string, number> }
+}
+
+export interface Notificacion {
+  id: number
+  cita_id: number
+  tipo: 'confirmacion' | 'recordatorio_24h' | 'recordatorio_2h'
+  canal: 'whatsapp' | 'correo'
+  estado: 'pendiente' | 'enviada' | 'fallida'
+  intentos: number
+  destino: string | null
+  mensaje: string | null
+  ultimo_error: string | null
+  enviado_at: string | null
+  created_at: string
+  cita?: Cita
+}
+
+export interface RespuestaNotificaciones {
+  notificaciones: { data: Notificacion[]; current_page: number; last_page: number; total: number }
+  resumen: Partial<Record<Notificacion['estado'], number>>
+}
+
+export interface ReporteHorasPico {
+  rango: { desde: string; hasta: string }
+  total_citas: number
+  por_hora: { hora: number; total: number }[]
+  por_dia: { dia: number; total: number }[]
+  matriz: number[][]
+  hora_pico: number | null
+  dia_pico: number | null
 }

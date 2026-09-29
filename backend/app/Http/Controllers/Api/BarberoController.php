@@ -25,7 +25,10 @@ class BarberoController extends Controller
     /** Listado público para el buscador de citas (PANT-01/02). */
     public function index(Request $request)
     {
-        $query = Barbero::query()->with(['user', 'servicios']);
+        // Solo cuentan las valoraciones visibles: una oculta por el administrador no debe influir en el promedio público.
+        $query = Barbero::query()->with(['user', 'servicios'])
+            ->withAvg(['valoraciones as promedio_valoracion' => fn ($q) => $q->where('visible', true)], 'calificacion')
+            ->withCount(['valoraciones as total_valoraciones' => fn ($q) => $q->where('visible', true)]);
 
         if ($request->filled('servicio_id')) {
             $query->whereHas('servicios', fn ($q) => $q->where('servicios.id', $request->integer('servicio_id')));

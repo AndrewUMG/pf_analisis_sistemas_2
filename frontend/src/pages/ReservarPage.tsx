@@ -4,6 +4,7 @@ import { api, mensajeError } from '../api/client'
 import { Alerta } from '../components/Alerta'
 import { Spinner } from '../components/Spinner'
 import { ImagenPlaceholder } from '../components/ImagenPlaceholder'
+import { ResumenValoracion } from '../components/Estrellas'
 import { hoyLocalISO } from '../utils/fechas'
 import type { Barbero, Servicio } from '../types'
 
@@ -204,6 +205,9 @@ export function ReservarPage() {
                       {barbero.user.nombres} {barbero.user.apellidos}
                     </span>
                     <span className="block text-xs text-text-muted">{barbero.especialidad ?? 'Barbero profesional'}</span>
+                    <span className="mt-0.5 block">
+                      <ResumenValoracion promedio={barbero.promedio_valoracion} total={barbero.total_valoraciones} />
+                    </span>
                   </span>
                 </button>
               ))}

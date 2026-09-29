@@ -27,7 +27,7 @@ class CitaController extends Controller
     {
         $usuario = $request->user();
 
-        $query = Cita::query()->with(['cliente', 'barbero.user', 'detalles.servicio']);
+        $query = Cita::query()->with(['cliente', 'barbero.user', 'detalles.servicio', 'valoracion']);
 
         // Cada rol solo ve lo que le corresponde; admin y recepcionista ven todo.
         if ($usuario->esCliente()) {

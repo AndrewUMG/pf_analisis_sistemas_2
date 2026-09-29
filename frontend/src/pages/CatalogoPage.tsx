@@ -4,6 +4,7 @@ import { api, mensajeError } from '../api/client'
 import { Spinner } from '../components/Spinner'
 import { Alerta } from '../components/Alerta'
 import { ImagenPlaceholder } from '../components/ImagenPlaceholder'
+import { ResumenValoracion } from '../components/Estrellas'
 import { useAuth } from '../context/AuthContext'
 import type { Barbero, Servicio } from '../types'
 
@@ -140,6 +141,9 @@ export function CatalogoPage() {
                   {barbero.user.nombres} {barbero.user.apellidos}
                 </h3>
                 <p className="text-sm text-text-muted">{barbero.especialidad ?? 'Barbero profesional'}</p>
+                <div className="mt-1">
+                  <ResumenValoracion promedio={barbero.promedio_valoracion} total={barbero.total_valoraciones} />
+                </div>
                 <div className="mt-2 flex flex-wrap gap-1">
                   {barbero.servicios.slice(0, 3).map((s) => (
                     <span key={s.id} className="rounded-full bg-neutral-soft px-2 py-0.5 text-xs text-text-muted">

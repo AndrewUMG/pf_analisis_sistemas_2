@@ -1,5 +1,6 @@
 import { Route, Routes } from 'react-router-dom'
 import { Navbar } from './components/Navbar'
+import { ErrorBoundary } from './components/ErrorBoundary'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { RoleRoute } from './components/RoleRoute'
 import { CatalogoPage } from './pages/CatalogoPage'
@@ -16,12 +17,15 @@ import { CatalogoPage as AdminCatalogoPage } from './pages/admin/CatalogoPage'
 import { UsuariosPage } from './pages/admin/UsuariosPage'
 import { ReportesPage } from './pages/admin/ReportesPage'
 import { ParametrosPage } from './pages/admin/ParametrosPage'
+import { ValoracionesPage } from './pages/admin/ValoracionesPage'
+import { NotificacionesPage } from './pages/admin/NotificacionesPage'
 
 function App() {
   return (
     <div className="min-h-screen bg-bg">
       <Navbar />
       <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
+        <ErrorBoundary>
         <Routes>
           <Route path="/" element={<CatalogoPage />} />
           <Route path="/login" element={<LoginPage />} />
@@ -110,6 +114,22 @@ function App() {
             }
           />
           <Route
+            path="/admin/valoraciones"
+            element={
+              <RoleRoute roles={['administrador']}>
+                <ValoracionesPage />
+              </RoleRoute>
+            }
+          />
+          <Route
+            path="/admin/notificaciones"
+            element={
+              <RoleRoute roles={['administrador']}>
+                <NotificacionesPage />
+              </RoleRoute>
+            }
+          />
+          <Route
             path="/admin/parametros"
             element={
               <RoleRoute roles={['administrador']}>
@@ -118,6 +138,7 @@ function App() {
             }
           />
         </Routes>
+        </ErrorBoundary>
       </main>
     </div>
   )

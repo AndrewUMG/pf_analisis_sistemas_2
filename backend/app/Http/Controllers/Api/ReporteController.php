@@ -101,6 +101,45 @@ class ReporteController extends Controller
         ]);
     }
 
+    /**
+     * REP-04: horas pico de atención. Cuenta las citas no canceladas por día de
+     * la semana y hora de inicio. Se agrega en PHP (no con funciones SQL) para
+     * que funcione igual en MySQL y en la base de pruebas.
+     */
+    public function horasPico(Request $request)
+    {
+        [$desde, $hasta] = $this->rango($request);
+
+        $citas = Cita::query()
+            ->whereBetween('fecha', [$desde, $hasta])
+            ->whereNotIn('estado', ['cancelada'])
+            ->get(['fecha', 'hora_inicio']);
+
+        $matriz = []; // [dia_semana 0=domingo..6][hora 0..23] => citas
+        $porHora = array_fill(0, 24, 0);
+        $porDia = array_fill(0, 7, 0);
+
+        foreach ($citas as $cita) {
+            $dia = $cita->fecha->dayOfWeek;
+            $hora = (int) substr($cita->hora_inicio, 0, 2);
+            $matriz[$dia][$hora] = ($matriz[$dia][$hora] ?? 0) + 1;
+            $porHora[$hora]++;
+            $porDia[$dia]++;
+        }
+
+        $cima = fn (array $valores) => max($valores) > 0 ? array_search(max($valores), $valores) : null;
+
+        return response()->json([
+            'rango' => compact('desde', 'hasta'),
+            'total_citas' => $citas->count(),
+            'por_hora' => collect($porHora)->map(fn ($total, $hora) => ['hora' => $hora, 'total' => $total])->values(),
+            'por_dia' => collect($porDia)->map(fn ($total, $dia) => ['dia' => $dia, 'total' => $total])->values(),
+            'matriz' => collect(range(0, 6))->map(fn ($dia) => collect(range(0, 23))->map(fn ($hora) => $matriz[$dia][$hora] ?? 0)),
+            'hora_pico' => $cima($porHora),
+            'dia_pico' => $cima($porDia),
+        ]);
+    }
+
     /** Los reportes por defecto cubren los últimos 30 días si no se especifica un rango. */
     private function rango(Request $request): array
     {

@@ -1,4 +1,5 @@
 import { EstadoBadge } from '../EstadoBadge'
+import { Estrellas } from '../Estrellas'
 import { ImagenPlaceholder } from '../ImagenPlaceholder'
 import { formatoHora, partesFecha, soloFecha } from '../../utils/fechas'
 import type { Cita } from '../../types'
@@ -7,10 +8,12 @@ export function CitaCard({
   cita,
   onReagendar,
   onCancelar,
+  onValorar,
 }: {
   cita: Cita
   onReagendar: (cita: Cita) => void
   onCancelar: (cita: Cita) => void
+  onValorar: (cita: Cita) => void
 }) {
   const { dia, mes } = partesFecha(soloFecha(cita.fecha))
   const barbero = cita.barbero
@@ -54,6 +57,24 @@ export function CitaCard({
           )}
         </div>
       </div>
+
+      {cita.estado === 'completada' && (
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t pt-3">
+          {cita.valoracion ? (
+            <div className="flex items-center gap-2 text-xs text-text-muted">
+              <Estrellas valor={cita.valoracion.calificacion} />
+              <span>Tu valoración</span>
+            </div>
+          ) : (
+            <>
+              <p className="text-xs text-text-muted">¿Cómo fue tu visita? Tu opinión nos ayuda a mejorar.</p>
+              <button type="button" onClick={() => onValorar(cita)} className="btn-secundario px-3 py-1.5 text-xs">
+                Calificar servicio
+              </button>
+            </>
+          )}
+        </div>
+      )}
 
       {cita.estado === 'confirmada' && (
         <div className="mt-4 border-t pt-3">

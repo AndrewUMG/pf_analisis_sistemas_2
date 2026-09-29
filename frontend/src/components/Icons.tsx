@@ -48,3 +48,19 @@ export function IconPersona({ className }: IconProps) {
     </svg>
   )
 }
+
+export function IconEstrella({ className, llena = true }: IconProps & { llena?: boolean }) {
+  return (
+    <svg viewBox="0 0 24 24" fill={llena ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" className={className}>
+      <path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9L12 3Z" />
+    </svg>
+  )
+}
+
+export function IconDescargar({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <path d="M12 4v11m0 0-4-4m4 4 4-4M5 19h14" />
+    </svg>
+  )
+}

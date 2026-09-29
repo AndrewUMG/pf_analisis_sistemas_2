@@ -15,8 +15,11 @@ class Notificacion extends Model
         'cita_id',
         'tipo',
         'canal',
+        'destino',
+        'mensaje',
         'estado',
         'intentos',
+        'ultimo_error',
         'enviado_at',
     ];
 

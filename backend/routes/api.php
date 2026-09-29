@@ -3,11 +3,13 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BarberoController;
 use App\Http\Controllers\Api\CitaController;
+use App\Http\Controllers\Api\NotificacionController;
 use App\Http\Controllers\Api\ParametroController;
 use App\Http\Controllers\Api\ProductoController;
 use App\Http\Controllers\Api\ReporteController;
 use App\Http\Controllers\Api\ServicioController;
 use App\Http\Controllers\Api\UsuarioController;
+use App\Http\Controllers\Api\ValoracionController;
 use App\Http\Controllers\Api\VentaController;
 use Illuminate\Support\Facades\Route;
 
@@ -69,6 +71,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/reportes/servicios-mas-demandados', [ReporteController::class, 'serviciosMasDemandados']);
         Route::get('/reportes/comisiones-por-barbero', [ReporteController::class, 'comisionesPorBarbero']);
         Route::get('/reportes/cancelaciones-ausentismo', [ReporteController::class, 'cancelacionesAusentismo']);
+        Route::get('/reportes/horas-pico', [ReporteController::class, 'horasPico']);
+
+        Route::get('/valoraciones', [ValoracionController::class, 'index']);
+        Route::put('/valoraciones/{valoracion}', [ValoracionController::class, 'actualizar']);
+
+        Route::get('/notificaciones', [NotificacionController::class, 'index']);
+        Route::post('/notificaciones/procesar', [NotificacionController::class, 'procesar']);
+        Route::post('/notificaciones/{notificacion}/reintentar', [NotificacionController::class, 'reintentar']);
 
         Route::post('/ventas/{venta}/anular', [VentaController::class, 'anular']);
     });

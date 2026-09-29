@@ -56,6 +56,11 @@ class Barbero extends Model
         return $this->hasMany(Cita::class);
     }
 
+    public function valoraciones(): HasMany
+    {
+        return $this->hasMany(Valoracion::class);
+    }
+
     /** Calcula la comisión de un monto de servicios según su porcentaje configurado. */
     public function calcularComision(float $montoServicios): float
     {
