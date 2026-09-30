@@ -13,7 +13,7 @@ export const NEGOCIO = {
   correo: 'hola@studiolabarber.com',
   horario: 'Lunes a sábado · 9:00 – 18:00',
   imagenes: {
-    hero: null as string | null,
-    local: null as string | null,
+    hero: '/imagenes/hero.webp' as string | null,
+    local: '/imagenes/local.webp' as string | null,
   },
 }

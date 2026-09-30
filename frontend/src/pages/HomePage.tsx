@@ -95,7 +95,7 @@ export function HomePage() {
           <div className="relative mx-auto w-full max-w-md lg:max-w-none lg:pl-8">
             <div className="absolute inset-0 translate-x-5 translate-y-5 rounded-[1.75rem] border-2 border-accent-strong/50 lg:left-8" aria-hidden="true" />
             <ImagenPlaceholder src={NEGOCIO.imagenes.hero} etiqueta="Foto del local o del equipo" className="relative aspect-[4/5] w-full rounded-[1.5rem] shadow-[var(--shadow-float)] sm:aspect-[5/6] lg:aspect-[4/5]" />
-            <div className="tarjeta absolute -bottom-6 left-3 flex items-center gap-3 p-4 sm:-left-2 lg:left-2" style={{ boxShadow: 'var(--shadow-raised)' }}>
+            <div className="tarjeta absolute -bottom-10 left-3 flex items-center gap-3 p-4 sm:-left-2 lg:left-2" style={{ boxShadow: 'var(--shadow-raised)' }}>
               <span className="grid h-11 w-11 place-items-center rounded-full bg-accent-soft text-accent-hover">
                 <IconCalendario className="h-5 w-5" />
               </span>
