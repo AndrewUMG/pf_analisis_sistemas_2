@@ -158,7 +158,7 @@ export function UsuariosPage() {
           <EstadoVacio icono={IconPersonas} titulo="No se encontraron usuarios" texto="Prueba con otro nombre o quita el filtro de rol." />
         ) : (
           <div className="-mx-5 -mb-5 overflow-x-auto">
-            <table className="w-full text-left text-sm">
+            <table className="tabla-responsive w-full text-left text-sm">
               <thead>
                 <tr className="border-y bg-bg-subtle text-xs uppercase tracking-wider text-text-muted">
                   <th scope="col" className="px-5 py-3 font-semibold">Usuario</th>

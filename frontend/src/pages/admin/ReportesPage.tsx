@@ -27,7 +27,7 @@ function hace30Dias(): string {
 function CargandoReporte() {
   return (
     <div className="space-y-4" role="status" aria-label="Cargando reporte">
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-3 gap-2 sm:gap-4">
         {[0, 1, 2].map((i) => (
           <Skeleton key={i} className="h-24" />
         ))}
@@ -102,7 +102,7 @@ function IngresosVista({ desde, hasta, onError }: Vista) {
 
   return (
     <div className="space-y-5">
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-3 gap-2 sm:gap-4">
         <StatCard etiqueta="Total del período" valor={quetzales(datos.total_periodo)} icono={IconGrafica} tono="marca" />
         <StatCard etiqueta="Promedio por día con ventas" valor={quetzales(promedio)} icono={IconCalendario} tono="acento" />
         <StatCard etiqueta="Mejor día" valor={mejor.total ? quetzales(mejor.total) : '—'} ayuda={mejor.fecha} icono={IconEstrella} tono="exito" />
@@ -118,8 +118,8 @@ function IngresosVista({ desde, hasta, onError }: Vista) {
           <figure>
             <div className="flex h-56 items-end gap-1.5 border-b pb-px" role="img" aria-label={`Ingresos diarios; el mejor día fue ${mejor.fecha} con ${quetzales(mejor.total)}`}>
               {dias.map((d) => (
-                <div key={d.fecha} className="group relative flex h-full flex-1 flex-col justify-end" title={`${d.fecha}: ${quetzales(d.total)}`}>
-                  <span className="mb-1 hidden text-center text-[0.65rem] font-medium text-text group-hover:block">{quetzales(d.total)}</span>
+                <div key={d.fecha} className="group relative flex h-full max-w-[4rem] flex-1 flex-col justify-end" title={`${d.fecha}: ${quetzales(d.total)}`}>
+                  <span className={`mb-1 text-center text-[0.65rem] font-medium text-text ${dias.length <= 7 ? 'block' : 'hidden group-hover:block'}`}>{quetzales(d.total)}</span>
                   <span
                     className="block w-full rounded-t-md transition-[height] duration-500"
                     style={{ height: `${Math.max(3, (d.total / maximo) * 100)}%`, backgroundColor: d.fecha === mejor.fecha ? 'var(--color-brand)' : 'var(--color-accent)' }}
@@ -129,7 +129,7 @@ function IngresosVista({ desde, hasta, onError }: Vista) {
             </div>
             <div className="mt-2 flex gap-1.5 text-[0.7rem] text-text-muted" aria-hidden="true">
               {dias.map((d, i) => (
-                <span key={d.fecha} className="flex-1 text-center">
+                <span key={d.fecha} className="max-w-[4rem] flex-1 text-center">
                   {i % cadaN === 0 ? d.fecha.slice(8) + '/' + d.fecha.slice(5, 7) : ''}
                 </span>
               ))}
@@ -235,7 +235,7 @@ function CancelacionesVista({ desde, hasta, onError }: Vista) {
 
   return (
     <div className="space-y-5">
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-3 gap-2 sm:gap-4">
         <StatCard etiqueta="Citas en el rango" valor={datos.total_citas} icono={IconCalendario} tono="marca" />
         <StatCard etiqueta="Canceladas" valor={`${datos.porcentaje_canceladas}%`} icono={IconCampana} tono="peligro" />
         <StatCard etiqueta="Ausentismo" valor={`${datos.porcentaje_ausentes}%`} icono={IconPersonas} tono="acento" />

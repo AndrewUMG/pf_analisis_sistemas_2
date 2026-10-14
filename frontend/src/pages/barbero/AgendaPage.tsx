@@ -138,7 +138,7 @@ export function AgendaPage() {
         </div>
       )}
 
-      <div className="mb-8 grid gap-4 sm:grid-cols-3">
+      <div className="mb-6 grid grid-cols-3 gap-2 sm:mb-8 sm:gap-4">
         <StatCard etiqueta="Citas del día" valor={agenda?.citas.length ?? '—'} icono={IconCalendario} tono="marca" />
         <StatCard etiqueta="Por atender" valor={agenda ? pendientes : '—'} icono={IconReloj} tono="info" />
         <StatCard etiqueta="Comisión del día" valor={agenda ? `Q${Number(agenda.comision_del_dia).toFixed(2)}` : '—'} ayuda={agenda ? `${agenda.citas_atendidas} atendidas` : undefined} icono={IconCheck} tono="acento" />

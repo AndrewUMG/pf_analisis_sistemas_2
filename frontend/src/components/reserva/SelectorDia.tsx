@@ -20,7 +20,7 @@ export function SelectorDia({ valor, onChange }: { valor: string; onChange: (iso
   }, [])
 
   return (
-    <div role="radiogroup" aria-label="Día de la cita" className="-mx-4 flex snap-x gap-2 overflow-x-auto px-4 pb-2 sm:mx-0 sm:px-0">
+    <div role="radiogroup" aria-label="Día de la cita" className="-mx-4 flex snap-x gap-2 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:px-0">
       {dias.map((d) => {
         const activo = d.iso === valor
         return (

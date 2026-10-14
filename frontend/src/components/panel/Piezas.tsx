@@ -13,15 +13,15 @@ export function StatCard({ etiqueta, valor, ayuda, icono: Icono, tono = 'marca' 
   }[tono]
 
   return (
-    <div className="tarjeta flex items-start gap-4 p-5">
+    <div className="tarjeta flex flex-col items-start gap-1 p-3.5 sm:flex-row sm:gap-4 sm:p-5">
       {Icono && (
-        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl" style={{ backgroundColor: colores[0], color: colores[1] }}>
+        <span className="hidden h-11 w-11 shrink-0 place-items-center rounded-xl sm:grid" style={{ backgroundColor: colores[0], color: colores[1] }}>
           <Icono className="h-5 w-5" />
         </span>
       )}
       <div className="min-w-0">
-        <p className="text-sm text-text-muted">{etiqueta}</p>
-        <p className="font-serif text-3xl font-semibold leading-tight text-text">{valor}</p>
+        <p className="text-xs text-text-muted sm:text-sm">{etiqueta}</p>
+        <p className="font-serif text-xl sm:text-3xl font-semibold leading-tight text-text">{valor}</p>
         {ayuda && <p className="mt-0.5 text-xs text-text-muted">{ayuda}</p>}
       </div>
     </div>

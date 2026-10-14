@@ -32,7 +32,7 @@ class ReservaService
      * @param  int|null  $citaExcluidaId  al reagendar, la cita que se mueve no debe bloquear su propio horario
      * @return array<int, string> horas de inicio disponibles, formato H:i
      */
-    public function disponibilidad(Barbero $barbero, string $fecha, array $servicioIds, ?int $citaExcluidaId = null): array
+    public function disponibilidad(Barbero $barbero, string $fecha, array $servicioIds, ?int $citaExcluidaId = null, bool $ignorarAnticipacion = false): array
     {
         $fechaCarbon = Carbon::parse($fecha)->startOfDay();
         $duracionTotal = $this->duracionTotalMinutos($barbero, $servicioIds);
@@ -48,7 +48,8 @@ class ReservaService
         $ocupados = $this->intervalosOcupados($barbero, $fechaCarbon, $citaExcluidaId);
 
         $anticipacionMinima = ParametroSistema::obtenerEntero(ParametroSistema::ANTICIPACION_MINIMA_HORAS, 2);
-        $noAntesDe = now()->addHours($anticipacionMinima);
+        // El registro presencial (walk-in) atiende de inmediato, sin la anticipación exigida en línea.
+        $noAntesDe = $ignorarAnticipacion ? now() : now()->addHours($anticipacionMinima);
 
         $disponibles = [];
         $granularidad = 15; // minutos entre cada franja candidata
@@ -229,7 +230,7 @@ class ReservaService
     /** Primer horario libre de hoy en adelante, usado por el registro walk-in. */
     private function siguienteFranjaLibreHoy(Barbero $barbero, array $servicioIds): ?string
     {
-        $disponibles = $this->disponibilidad($barbero, now()->toDateString(), $servicioIds);
+        $disponibles = $this->disponibilidad($barbero, now()->toDateString(), $servicioIds, null, ignorarAnticipacion: true);
 
         return $disponibles[0] ?? null;
     }

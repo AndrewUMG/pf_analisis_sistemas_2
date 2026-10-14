@@ -20,10 +20,10 @@ export function Pasos({ etiquetas, actual }: { etiquetas: readonly string[]; act
                 >
                   {hecho ? <IconCheck className="h-4 w-4" /> : i + 1}
                 </span>
-                <span className={`text-sm font-medium ${activo ? 'text-text' : 'hidden text-text-muted sm:inline'}`}>{etiqueta}</span>
+                <span className={`whitespace-nowrap text-sm font-medium ${activo ? 'text-text' : 'hidden text-text-muted sm:inline'}`}>{etiqueta}</span>
               </span>
               {i < etiquetas.length - 1 && (
-                <span className="mx-3 h-0.5 flex-1 rounded-full" style={{ backgroundColor: hecho ? 'var(--color-brand)' : 'var(--color-border-strong)' }} aria-hidden="true" />
+                <span className="mx-2 h-0.5 min-w-3 flex-1 rounded-full sm:mx-3" style={{ backgroundColor: hecho ? 'var(--color-brand)' : 'var(--color-border-strong)' }} aria-hidden="true" />
               )}
             </li>
           )

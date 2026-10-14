@@ -150,7 +150,8 @@ class AuthController extends Controller
                 ['token' => Hash::make($token), 'created_at' => now()]
             );
 
-            $mensajeria->enviar('correo', $usuario->email, "Tu enlace para restablecer la contraseña (válido 60 min): token={$token}");
+            $enlace = rtrim(env('FRONTEND_URL', 'http://localhost:5173'), '/').'/restablecer-password?'.http_build_query(['email' => $usuario->email, 'token' => $token]);
+            $mensajeria->enviar('correo', $usuario->email, "Restablece tu contraseña (el enlace es válido 60 minutos): {$enlace}");
         }
 
         return response()->json(['mensaje' => 'Si el correo existe, se envió un enlace de recuperación.']);

@@ -31,6 +31,9 @@ class VentaService
             if ($cita && $cita->estado !== 'completada') {
                 throw new NegocioException('Solo se puede cobrar una cita en estado Completada.');
             }
+            if ($cita && $cita->venta()->where('estado', '!=', 'anulada')->exists()) {
+                throw new NegocioException('Esta cita ya fue cobrada.');
+            }
 
             $venta = Venta::create([
                 'cita_id' => $cita?->id,

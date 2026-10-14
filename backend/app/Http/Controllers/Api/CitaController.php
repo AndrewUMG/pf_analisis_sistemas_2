@@ -39,6 +39,10 @@ class CitaController extends Controller
         if ($request->filled('estado')) {
             $query->where('estado', $request->string('estado'));
         }
+        // Para Caja: solo citas que aún no tienen una venta vigente.
+        if ($request->boolean('sin_cobro')) {
+            $query->whereDoesntHave('venta', fn ($q) => $q->where('estado', '!=', 'anulada'));
+        }
         if ($request->filled('fecha')) {
             $query->whereDate('fecha', $request->date('fecha'));
         }

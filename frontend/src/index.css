@@ -385,3 +385,33 @@ body {
     transform: translateX(-100%);
   }
 }
+
+/* Tablas que en móvil (< 768 px) se apilan como tarjetas en lugar de desbordar horizontalmente. */
+@media (max-width: 767px) {
+  .tabla-responsive thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+  .tabla-responsive,
+  .tabla-responsive tbody,
+  .tabla-responsive tr {
+    display: block;
+    width: 100%;
+  }
+  .tabla-responsive tr {
+    padding: 0.9rem 1.25rem;
+    border-bottom: 1px solid var(--color-border);
+  }
+  .tabla-responsive td {
+    display: block !important;
+    min-width: 0 !important;
+    padding: 0.2rem 0 !important;
+    text-align: left !important;
+  }
+  .tabla-responsive td > div.flex {
+    justify-content: flex-start !important;
+  }
+}

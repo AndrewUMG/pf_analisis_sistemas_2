@@ -10,6 +10,8 @@ import { HomePage } from './pages/HomePage'
 // Cada pantalla se descarga solo cuando se visita (el sitio público carga primero y rápido).
 const ResponsivePage = lazy(() => import('./pages/dev/ResponsivePage').then((m) => ({ default: m.ResponsivePage })))
 const ServiciosPage = lazy(() => import('./pages/ServiciosPage').then((m) => ({ default: m.ServiciosPage })))
+const OlvidePasswordPage = lazy(() => import('./pages/OlvidePasswordPage').then((m) => ({ default: m.OlvidePasswordPage })))
+const RestablecerPasswordPage = lazy(() => import('./pages/RestablecerPasswordPage').then((m) => ({ default: m.RestablecerPasswordPage })))
 const LoginPage = lazy(() => import('./pages/LoginPage').then((m) => ({ default: m.LoginPage })))
 const RegistroPage = lazy(() => import('./pages/RegistroPage').then((m) => ({ default: m.RegistroPage })))
 const ReservarPage = lazy(() => import('./pages/ReservarPage').then((m) => ({ default: m.ReservarPage })))
@@ -46,6 +48,8 @@ function App() {
           <Route path="/servicios" element={<ServiciosPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/registro" element={<RegistroPage />} />
+          <Route path="/olvide-password" element={<OlvidePasswordPage />} />
+          <Route path="/restablecer-password" element={<RestablecerPasswordPage />} />
           <Route path="/reservar" element={<ProtectedRoute><ReservarPage /></ProtectedRoute>} />
           <Route path="/mis-citas" element={<ProtectedRoute><MisCitasPage /></ProtectedRoute>} />
         </Route>

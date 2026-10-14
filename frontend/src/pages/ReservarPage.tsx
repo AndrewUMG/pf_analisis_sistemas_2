@@ -163,7 +163,7 @@ export function ReservarPage() {
         <Pasos etiquetas={PASOS} actual={paso} />
       </div>
 
-      <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_22rem] lg:items-start">
+      <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-[1fr_22rem] lg:items-start">
         <section aria-labelledby="titulo-paso">
           {error && (
             <div className="mb-5" role="alert">

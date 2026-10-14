@@ -132,7 +132,7 @@ export function InventarioPage() {
         </div>
       )}
 
-      <div className="mb-6 grid gap-4 sm:grid-cols-3">
+      <div className="mb-6 grid grid-cols-3 gap-2 sm:gap-4">
         <StatCard etiqueta="Productos activos" valor={activos.length} icono={IconCaja3d} tono="marca" />
         <StatCard etiqueta="En nivel crítico" valor={criticos.length} ayuda={criticos.length ? 'Conviene reabastecer' : 'Todo en orden'} icono={IconCampana} tono={criticos.length ? 'peligro' : 'exito'} />
         <StatCard etiqueta="Valor en existencias" valor={quetzales(valorTotal)} icono={IconGrafica} tono="acento" />
@@ -154,7 +154,7 @@ export function InventarioPage() {
           <EstadoVacio icono={IconCaja3d} titulo={soloCriticos ? 'Ningún producto en nivel crítico' : 'Aún no hay productos'} texto={soloCriticos ? 'Todas las existencias están por encima del mínimo.' : 'Agrega tu primer producto para controlar el inventario.'} />
         ) : (
           <div className="-mx-5 -mb-5 overflow-x-auto">
-            <table className="w-full text-left text-sm">
+            <table className="tabla-responsive w-full text-left text-sm">
               <thead>
                 <tr className="border-b bg-bg-subtle text-xs uppercase tracking-wider text-text-muted">
                   <th scope="col" className="px-5 py-3 font-semibold">Producto</th>

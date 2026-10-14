@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { api, mensajeError } from '../../api/client'
+import { formatoHora, partesFecha, soloFecha } from '../../utils/fechas'
 import { Alerta } from '../../components/Alerta'
 import { FilasSkeleton } from '../../components/Skeleton'
 import { PageHeader } from '../../components/PageHeader'
@@ -30,7 +31,7 @@ export function CajaPage() {
     setError('')
     try {
       const [resCitas, resProductos, resVentas] = await Promise.all([
-        api.get<PaginaCitas>('/citas', { params: { estado: 'completada' } }),
+        api.get<PaginaCitas>('/citas', { params: { estado: 'completada', sin_cobro: 1 } }),
         api.get<Producto[]>('/productos'),
         api.get<PaginaVentas>('/ventas'),
       ])
@@ -102,7 +103,7 @@ export function CajaPage() {
   if (cargando) return <FilasSkeleton cantidad={4} />
 
   return (
-    <div>
+    <div className="pb-20 lg:pb-0">
       <PageHeader eyebrow="Recepción" titulo="Caja" descripcion="Cobra una cita completada, productos, o ambos en un mismo recibo." />
 
       {error && (
@@ -120,7 +121,7 @@ export function CajaPage() {
       )}
 
     <div className="grid items-start gap-8 lg:grid-cols-[1fr_22rem]">
-     <div className="space-y-8">
+     <div className="space-y-8 lg:col-start-1 lg:row-start-1">
       <section>
         <h2 className="mb-3 text-lg font-semibold text-text">1. Cita completada (opcional)</h2>
         {citasCompletadas.length === 0 ? (
@@ -140,6 +141,9 @@ export function CajaPage() {
                     {cita.cliente?.nombres} {cita.cliente?.apellidos}
                   </span>
                   <span className="text-text-muted"> · {cita.detalles?.map((d) => d.servicio?.nombre).join(', ')}</span>
+                  <span className="block text-xs text-text-muted">
+                    {partesFecha(soloFecha(cita.fecha)).dia} {partesFecha(soloFecha(cita.fecha)).mes} · {formatoHora(cita.hora_inicio)} · con {cita.barbero?.user?.nombres ?? 'barbero'}
+                  </span>
                   <span className="float-right font-semibold text-accent-hover">
                     Q{(cita.detalles ?? []).reduce((s, d) => s + Number(d.precio_aplicado), 0).toFixed(2)}
                   </span>
@@ -176,30 +180,8 @@ export function CajaPage() {
           </ul>
         )}
       </section>
-
-      <section>
-        <h2 className="mb-3 text-lg font-semibold text-text">Ventas recientes</h2>
-        {ventasRecientes.length === 0 ? (
-          <p className="text-sm text-text-muted">Todavía no hay ventas registradas.</p>
-        ) : (
-          <ul className="space-y-2">
-            {ventasRecientes.map((venta) => (
-              <li key={venta.id} className="flex items-center justify-between rounded-lg border bg-surface p-3 text-sm">
-                <span>
-                  <span className="font-medium text-text">{venta.numero_recibo}</span>
-                  <span className="text-text-muted"> · {venta.cliente ? `${venta.cliente.nombres} ${venta.cliente.apellidos}` : 'Venta directa'}</span>
-                </span>
-                <span className={venta.estado === 'anulada' ? 'text-danger line-through' : 'font-semibold text-text'}>
-                  Q{Number(venta.total).toFixed(2)}
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
      </div>
-
-      <section className="tarjeta space-y-3 p-5 lg:sticky lg:top-6">
+      <section id="cobro" className="tarjeta space-y-3 p-5 lg:sticky lg:top-6 lg:col-start-2 lg:row-span-2 lg:row-start-1">
         <h2 className="text-lg font-semibold text-text">3. Cobro</h2>
         <div className="grid grid-cols-2 gap-3">
           <label className="block">
@@ -233,7 +215,39 @@ export function CajaPage() {
           {enviando ? 'Registrando…' : 'Registrar cobro'}
         </button>
       </section>
+      <div className="lg:col-start-1 lg:row-start-2">
+      <section>
+        <h2 className="mb-3 text-lg font-semibold text-text">Ventas recientes</h2>
+        {ventasRecientes.length === 0 ? (
+          <p className="text-sm text-text-muted">Todavía no hay ventas registradas.</p>
+        ) : (
+          <ul className="space-y-2">
+            {ventasRecientes.map((venta) => (
+              <li key={venta.id} className="flex items-center justify-between rounded-lg border bg-surface p-3 text-sm">
+                <span>
+                  <span className="font-medium text-text">{venta.numero_recibo}</span>
+                  <span className="text-text-muted"> · {venta.cliente ? `${venta.cliente.nombres} ${venta.cliente.apellidos}` : 'Venta directa'}</span>
+                </span>
+                <span className={venta.estado === 'anulada' ? 'text-danger line-through' : 'font-semibold text-text'}>
+                  Q{Number(venta.total).toFixed(2)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+      </div>
 
+
+      {subtotal > 0 && (
+        <div className="fixed inset-x-0 bottom-0 z-30 flex items-center justify-between gap-3 border-t bg-surface px-4 py-3 shadow-[var(--shadow-float)] lg:hidden">
+          <div>
+            <p className="text-xs text-text-muted">Total a cobrar</p>
+            <p className="font-serif text-xl font-semibold text-text">Q{total.toFixed(2)}</p>
+          </div>
+          <a href="#cobro" className="btn-principal">Ir a cobrar</a>
+        </div>
+      )}
     </div>
     </div>
   )

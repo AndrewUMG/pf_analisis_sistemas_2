@@ -16,6 +16,7 @@ export function LoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [mayusculas, setMayusculas] = useState(false)
+  const restablecida = Boolean((location.state as { restablecida?: boolean } | null)?.restablecida)
   const requiereLogin = Boolean((location.state as { desde?: string } | null)?.desde)
 
   async function enviar(e: FormEvent) {
@@ -44,6 +45,11 @@ export function LoginPage() {
       }
     >
       <form onSubmit={enviar} className="space-y-6" noValidate={false}>
+        {restablecida && !error && (
+          <div role="status">
+            <Alerta tipo="exito" mensaje="Contraseña actualizada. Ya puedes iniciar sesión." />
+          </div>
+        )}
         {requiereLogin && !error && (
           <p className="rounded-lg bg-info-soft p-3 text-sm text-info" role="status">
             Inicia sesión para continuar con tu reserva.
@@ -62,6 +68,11 @@ export function LoginPage() {
         <Campo etiqueta="Contraseña">
           {(p) => <InputPassword {...p} required autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} onKeyUp={(e) => setMayusculas(e.getModifierState('CapsLock'))} onBlur={() => setMayusculas(false)} placeholder="Tu contraseña" />}
         </Campo>
+        <div className="-mt-3 text-right">
+          <Link to="/olvide-password" className="text-sm font-medium text-text-muted underline decoration-border-strong underline-offset-4 hover:text-text">
+            ¿Olvidaste tu contraseña?
+          </Link>
+        </div>
         {mayusculas && (
           <p className="-mt-4 text-xs font-medium" style={{ color: 'var(--color-danger)' }} role="status">
             Bloq Mayús está activado.

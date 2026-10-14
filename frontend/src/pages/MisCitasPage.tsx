@@ -11,7 +11,7 @@ import { CitaCard } from '../components/citas/CitaCard'
 import { CancelarDialog } from '../components/citas/CancelarDialog'
 import { ReagendarDialog } from '../components/citas/ReagendarDialog'
 import { ValorarDialog } from '../components/citas/ValorarDialog'
-import { soloFecha } from '../utils/fechas'
+import { hoyLocalISO, soloFecha } from '../utils/fechas'
 import type { Cita, PaginaCitas } from '../types'
 
 type Pestana = 'proximas' | 'historial'
@@ -48,8 +48,11 @@ export function MisCitasPage() {
 
   // Próximas: de la más cercana a la más lejana. Historial: de la más reciente hacia atrás.
   const { proximas, historial } = useMemo(() => {
-    const activas = citas.filter((c) => ESTADOS_ACTIVOS.includes(c.estado))
-    const pasadas = citas.filter((c) => !ESTADOS_ACTIVOS.includes(c.estado))
+    // Una cita activa cuya fecha ya pasó (nadie la cerró) se considera historial.
+    const hoy = hoyLocalISO()
+    const vigente = (c: Cita) => ESTADOS_ACTIVOS.includes(c.estado) && soloFecha(c.fecha) >= hoy
+    const activas = citas.filter(vigente)
+    const pasadas = citas.filter((c) => !vigente(c))
     return {
       proximas: [...activas].sort((a, b) => claveOrden(a).localeCompare(claveOrden(b))),
       historial: [...pasadas].sort((a, b) => claveOrden(b).localeCompare(claveOrden(a))),

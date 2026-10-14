@@ -44,8 +44,10 @@ export function AuthLayout({ titulo, subtitulo, children, pie }: { titulo: strin
 
         <div className="flex flex-col justify-center p-6 sm:p-12">
           <div className="textura-rayas -mx-6 -mt-6 mb-10 flex items-center justify-between gap-3 px-6 py-4 sm:-mx-12 sm:-mt-12 sm:px-12 lg:hidden" style={{ backgroundColor: 'var(--color-brand)', color: 'var(--color-text-on-brand)' }}>
-            <Logo invertido />
-            <p className="text-right font-serif text-sm leading-snug">{NEGOCIO.eslogan}</p>
+            <div className="shrink-0">
+              <Logo invertido />
+            </div>
+            <p className="max-w-[8.5rem] text-right font-serif text-xs leading-snug">{NEGOCIO.eslogan}</p>
           </div>
           <h1 className="text-3xl font-semibold text-text sm:text-4xl">{titulo}</h1>
           <p className="mt-3 text-base text-text-muted">{subtitulo}</p>
