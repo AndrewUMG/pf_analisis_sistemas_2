@@ -84,7 +84,7 @@ class CitaController extends Controller
             'hora_inicio' => 'required|date_format:H:i',
             'servicio_ids' => 'required|array|min:1',
             'servicio_ids.*' => 'integer|exists:servicios,id',
-            'notas' => 'nullable|string|max:500',
+            'notas' => 'nullable|string|max:255',
         ]);
 
         $cita = $this->reservas->reservar(
@@ -110,7 +110,7 @@ class CitaController extends Controller
             'barbero_id' => 'required|exists:barberos,id',
             'servicio_ids' => 'required|array|min:1',
             'servicio_ids.*' => 'integer|exists:servicios,id',
-            'notas' => 'nullable|string|max:500',
+            'notas' => 'nullable|string|max:255',
         ]);
 
         $cita = $this->reservas->registrarWalkIn(

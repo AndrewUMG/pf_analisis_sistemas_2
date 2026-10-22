@@ -174,7 +174,7 @@ export function WalkinPage() {
           )}
         </section>
 
-        <Campo etiqueta="Notas (opcional)">{(p) => <textarea {...p} className="campo" rows={2} value={notas} onChange={(e) => setNotas(e.target.value)} />}</Campo>
+        <Campo etiqueta="Notas (opcional)">{(p) => <textarea {...p} className="campo" rows={2} maxLength={255} value={notas} onChange={(e) => setNotas(e.target.value)} />}</Campo>
 
         <div className="sticky bottom-0 z-10 -mx-4 flex items-center justify-between gap-4 border-t bg-bg/95 px-4 py-3 backdrop-blur sm:mx-0 sm:rounded-xl sm:border sm:px-5">
           <div>

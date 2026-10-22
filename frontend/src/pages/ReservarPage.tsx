@@ -325,7 +325,7 @@ export function ReservarPage() {
                   <p className="mt-1 text-sm text-text-muted">Revisa el resumen y, si quieres, deja una nota para tu barbero.</p>
                   <label className="mt-6 block">
                     <span className="mb-1.5 block text-sm font-medium text-text">Notas para el barbero (opcional)</span>
-                    <textarea className="campo" rows={4} maxLength={500} value={notas} onChange={(e) => setNotas(e.target.value)} placeholder="Ej. degradado bajo, alergia a ciertos productos…" />
+                    <textarea className="campo" rows={4} maxLength={255} value={notas} onChange={(e) => setNotas(e.target.value)} placeholder="Ej. degradado bajo, alergia a ciertos productos…" />
                   </label>
                   <p className="mt-4 text-xs text-text-muted">
                     Duración estimada: {duracionDe(serviciosSeleccionados)} min de servicio. Podrás reagendar o cancelar desde “Mis citas”, respetando la anticipación mínima.

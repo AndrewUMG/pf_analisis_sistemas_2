@@ -123,10 +123,10 @@ class BarberoController extends Controller
     public function registrarExcepcion(Request $request, Barbero $barbero)
     {
         $datos = $request->validate([
-            'tipo' => 'required|in:dia_libre,permiso,vacaciones,otro',
+            'tipo' => 'required|in:dia_libre,permiso,vacaciones,bloqueo_temporal',
             'fecha_inicio' => 'required|date',
             'fecha_fin' => 'required|date|after_or_equal:fecha_inicio',
-            'motivo' => 'nullable|string|max:255',
+            'motivo' => 'nullable|string|max:150',
         ]);
 
         $excepcion = $this->agenda->registrarExcepcion(

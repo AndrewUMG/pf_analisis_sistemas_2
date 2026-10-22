@@ -40,7 +40,7 @@ export interface HorarioBarbero {
 export interface ExcepcionHorario {
   id: number
   barbero_id: number
-  tipo: 'dia_libre' | 'permiso' | 'vacaciones' | 'otro'
+  tipo: 'dia_libre' | 'permiso' | 'vacaciones' | 'bloqueo_temporal'
   fecha_inicio: string
   fecha_fin: string
   motivo: string | null

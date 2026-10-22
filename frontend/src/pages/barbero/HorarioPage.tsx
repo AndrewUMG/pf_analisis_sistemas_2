@@ -22,7 +22,7 @@ const TIPOS_EXCEPCION: Record<ExcepcionHorario['tipo'], string> = {
   dia_libre: 'Día libre',
   permiso: 'Permiso',
   vacaciones: 'Vacaciones',
-  otro: 'Otro',
+  bloqueo_temporal: 'Bloqueo temporal',
 }
 
 export function HorarioPage() {
@@ -200,6 +200,7 @@ export function HorarioPage() {
               <span className="mb-1 block text-sm font-medium text-text">Motivo (opcional)</span>
               <input
                 className="campo"
+                maxLength={150}
                 value={excepcion.motivo}
                 onChange={(e) => setExcepcion((f) => ({ ...f, motivo: e.target.value }))}
               />
