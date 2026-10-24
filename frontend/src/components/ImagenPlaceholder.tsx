@@ -1,5 +1,10 @@
 import { IconImagen, IconPersona } from './Icons'
 
+/** Cloudinary entrega la foto reducida y en el mejor formato (WebP/AVIF) para el dispositivo. */
+function optimizar(src: string): string {
+  return src.includes('res.cloudinary.com') && src.includes('/upload/') ? src.replace('/upload/', '/upload/f_auto,q_auto,w_900,c_limit/') : src
+}
+
 /**
  * Muestra la foto real cuando ya existe (src). Mientras no haya una, se
  * muestra un espacio reservado con borde punteado e ícono, para que sea
@@ -21,7 +26,7 @@ export function ImagenPlaceholder({
   if (src) {
     return (
       <img
-        src={src}
+        src={optimizar(src)}
         alt={etiqueta ?? ''}
         loading="lazy"
         decoding="async"
