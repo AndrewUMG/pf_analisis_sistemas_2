@@ -8,6 +8,7 @@ use App\Models\Barbero;
 use App\Models\User;
 use App\Services\AgendaService;
 use App\Services\ReservaService;
+use App\Services\AlmacenImagenes;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -162,7 +163,7 @@ class BarberoController extends Controller
     }
 
     /** Sube o reemplaza la foto de perfil; puede hacerlo el administrador o el propio barbero. */
-    public function subirFoto(Request $request, Barbero $barbero)
+    public function subirFoto(Request $request, Barbero $barbero, AlmacenImagenes $almacen)
     {
         $usuario = $request->user();
         if (! $usuario->esAdministrador() && $usuario->id !== $barbero->user_id) {
@@ -173,19 +174,10 @@ class BarberoController extends Controller
             'foto' => 'required|image|mimes:jpg,jpeg,png,webp|max:4096',
         ]);
 
-        if ($barbero->foto) {
-            Storage::disk('public')->delete($this->rutaDesdeUrl($barbero->foto));
-        }
-
-        $ruta = $request->file('foto')->store('barberos', 'public');
-        $barbero->update(['foto' => Storage::disk('public')->url($ruta)]);
+        $almacen->eliminar($barbero->foto);
+        $barbero->update(['foto' => $almacen->subir($request->file('foto'), 'barberos')]);
 
         return $barbero->load(['user', 'servicios']);
     }
 
-    /** Convierte la URL pública guardada de vuelta a la ruta relativa del disco "public". */
-    private function rutaDesdeUrl(string $url): string
-    {
-        return Str::after(parse_url($url, PHP_URL_PATH) ?? '', '/storage/');
-    }
 }
